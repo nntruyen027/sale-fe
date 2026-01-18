@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_BE,
+    baseURL: "https://saleapi.tmqcreator.top",
     headers: {
         "Content-Type": "application/json",
     },
