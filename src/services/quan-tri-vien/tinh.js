@@ -1,4 +1,3 @@
-"use client";
 import api from "@/services/api";
 
 const BASE_PATH = "/quan-tri/tinh";

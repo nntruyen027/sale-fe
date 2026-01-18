@@ -1,5 +1,5 @@
-"use client";
-import api from "@/lib/api.client";
+import api from "@/services/api";
+
 
 const BASE_PATH = "/files";
 
