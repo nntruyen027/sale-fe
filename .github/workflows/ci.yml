@@ -1,11 +1,11 @@
-name: CD - Deploy Next.js (systemd)
+name: CI - Build Next.js (once)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
 
 jobs:
-  deploy:
+  build:
     runs-on: self-hosted
 
     steps:
@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create env file (safe)
+      - name: Create env for build
         run: |
           cat <<EOF > .env.local
           NEXT_PUBLIC_BE=${{ secrets.NEXT_PUBLIC_BE }}
@@ -30,17 +30,16 @@ jobs:
       - name: Build Next.js (standalone)
         run: npm run build
 
-      - name: Deploy build to app server
+      - name: Package build artifact
         run: |
-          rsync -av .next/standalone/ \
-            dev_01@10.110.20.107:/home/dev_01/sale-fe/
+          tar -czf sale-fe.tar.gz \
+            .next/standalone \
+            .next/static \
+            public \
+            package.json
 
-          rsync -av .next/static/ \
-            dev_01@10.110.20.107:/home/dev_01/sale-fe/.next/static/
-
-          rsync -av public/ \
-            dev_01@10.110.20.107:/home/dev_01/sale-fe/public/
-
-      - name: Restart Next.js service
-        run: |
-          ssh dev_01@10.110.20.107 "sudo systemctl restart sale-fe"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sale-fe-build
+          path: sale-fe.tar.gz
