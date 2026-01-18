@@ -3,7 +3,7 @@ import "antd/dist/reset.css";
 import ClientLayout from "./ClientLayout";
 
 export const metadata = {
-    title: 'Sổ chủ nhiệm điện tử',
+    title: 'Thương mại điện tử',
     icons: {
         icon: "/favicon.png",
         shortcut: "/favicon.png",
