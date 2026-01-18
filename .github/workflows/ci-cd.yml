@@ -30,24 +30,30 @@ jobs:
       - name: Build Next.js (standalone)
         run: npm run build
 
-      - name: Package build
+      - name: Deploy standalone (safe)
         run: |
-          tar -czf sale-fe.tar.gz \
-            .next/standalone \
+          rsync -av --delete \
+            .next/standalone/ \
+            /home/dev_01/sale-fe/
+
+          rsync -av \
             .next/static \
+            /home/dev_01/sale-fe/.next/
+
+          rsync -av \
             public \
-            package.json
+            /home/dev_01/sale-fe/
 
-      - name: Copy build to server
-        run: |
-          scp sale-fe.tar.gz \
-            dev_01@10.110.20.107:/home/dev_01/sale-fe/
+          rsync -av \
+            package.json \
+            /home/dev_01/sale-fe/
 
-      - name: Extract build & restart service
+      - name: Restart service
         run: |
-          ssh dev_01@10.110.20.107 <<'EOF'
-          set -e
-          cd /home/dev_01/sale-fe
-          tar -xzf sale-fe.tar.gz
           sudo systemctl restart sale-fe
-          EOF
+
+      - name: Cleanup build artifacts
+        run: |
+          echo "🧹 Cleaning build artifacts..."
+          rm -rf .next
+          rm -f .env.local
