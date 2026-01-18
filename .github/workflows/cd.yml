@@ -15,11 +15,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: sale-fe-build
+          run-id: ${{ github.event.workflow_run.id }}
+          path: .
 
       - name: Copy artifact to server
         run: |
-          scp sale-fe.tar.gz \
-            dev_01@10.110.20.107:/home/dev_01/sale-fe/
+          scp sale-fe.tar.gz dev_01@10.110.20.107:/home/dev_01/sale-fe/
 
       - name: Extract & restart service
         run: |
