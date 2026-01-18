@@ -24,7 +24,7 @@ export async function xoaXa(id) {
     await api.delete(`${BASE_PATH}/${id}`);
 }
 
-export async function layFileImportXa() {
+export async function layFileImport () {
     const res = await api.get(`${BASE_PATH}/importer/template`, {
         responseType: "blob",
     });
