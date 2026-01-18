@@ -1,11 +1,11 @@
-name: CI - Build Next.js (once)
+name: CI/CD - Build & Deploy Next.js
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ main ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: self-hosted
 
     steps:
@@ -30,7 +30,7 @@ jobs:
       - name: Build Next.js (standalone)
         run: npm run build
 
-      - name: Package build artifact
+      - name: Package build
         run: |
           tar -czf sale-fe.tar.gz \
             .next/standalone \
@@ -38,8 +38,16 @@ jobs:
             public \
             package.json
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sale-fe-build
-          path: sale-fe.tar.gz
+      - name: Copy build to server
+        run: |
+          scp sale-fe.tar.gz \
+            dev_01@10.110.20.107:/home/dev_01/sale-fe/
+
+      - name: Extract build & restart service
+        run: |
+          ssh dev_01@10.110.20.107 <<'EOF'
+          set -e
+          cd /home/dev_01/sale-fe
+          tar -xzf sale-fe.tar.gz
+          sudo systemctl restart sale-fe
+          EOF
