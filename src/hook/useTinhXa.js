@@ -38,7 +38,7 @@ export function useTinhXaSelect() {
             ...prev,
             page,
             total: res.total || 0
-        }));
+        }))
     };
 
     /* ===================== XÃ ===================== */

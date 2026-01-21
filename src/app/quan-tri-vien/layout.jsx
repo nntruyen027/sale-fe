@@ -1,6 +1,15 @@
-'use client';
+"use client";
 
-import {Avatar, Button, Dropdown, Layout, Menu, theme, Typography} from 'antd';
+import {
+    Avatar,
+    Button,
+    Dropdown,
+    Layout,
+    Menu,
+    theme,
+    Typography,
+} from "antd";
+
 import {
     BarChartOutlined,
     LogoutOutlined,
@@ -10,190 +19,283 @@ import {
     SettingOutlined,
     TableOutlined,
     UsergroupAddOutlined,
-    UserOutlined
-} from '@ant-design/icons';
+    UserOutlined,
+} from "@ant-design/icons";
 
-import {useEffect, useState} from "react";
-import {useRouter} from "next/navigation";
-import {useModal} from "@/store/modal";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useModal } from "@/store/modal";
+import { useAuthStore } from "@/store/auth";
+import { usePermission } from "@/hook/usePermission";
 
-const {Sider, Header, Content} = Layout;
+const { Sider, Header, Content } = Layout;
 
-const roleTrans = {
-    ADMIN: "Quản trị viên",
-    TEACHER: "Giáo viên",
-    STUDENT: "Học sinh",
-};
+/* ================= MENU CONFIG ================= */
 
-const adminMenuItems = [
-    {key: '/quan-tri-vien/dashboard', label: 'Dashboard', icon: <BarChartOutlined/>},
-
+const menuConfig = [
     {
-        key: 'quan-ly-nguoi-dung',
-        label: 'Quản lý người dùng',
-        icon: <UsergroupAddOutlined/>,
-        children: [
-            {key: '/quan-tri-vien/giao-vien', label: 'Giáo viên'},
-            {key: '/quan-tri-vien/hoc-sinh', label: 'Học sinh'},
-        ],
+        key: "/quan-tri-vien/dashboard",
+        label: "Dashboard",
+        icon: <BarChartOutlined />,
+        permissions: [], // PUBLIC
     },
-
     {
-        key: 'danh-muc',
-        label: 'Quản lý danh mục',
-        icon: <TableOutlined/>,
+        key: "quan-ly",
+        label: "Người dùng",
+        icon: <UsergroupAddOutlined />,
         children: [
-            {key: '/quan-tri-vien/tinh', label: 'Tỉnh/Thành phố'},
-            {key: '/quan-tri-vien/xa', label: 'Xã/Phường'},
-            {key: '/quan-tri-vien/truong', label: 'Trường'},
-            {key: '/quan-tri-vien/lop', label: 'Lớp'},
-            {key: '/quan-tri-vien/bo-mon', label: 'Bộ môn'},
+            {
+                key: "/quan-tri-vien/nguoi-dung",
+                label: "Tài khoản",
+                permissions: ['user:read', 'user:create', 'user:update', 'user:delete'],
+            },
+            {
+                key: "/quan-tri-vien/vai-tro",
+                label: "Vai trò",
+                permissions: ['role:read', 'role:create', 'role:update', 'role:delete'],
+            },
         ],
     },
     {
-        key: 'he-thong',
-        label: 'Quản lý hệ thống',
-        icon: <SettingOutlined/>,
+        key: "danh-muc",
+        label: "Danh mục",
+        icon: <TableOutlined />,
         children: [
-            {key: '/quan-tri-vien/tham-so', label: 'Tham số'},
+            {
+                key: "/quan-tri-vien/tinh",
+                label: "Tỉnh / Thành phố",
+                permissions: ["tinh:read", "tinh:update", "tinh:delete", 'tinh:create'],
+            },
+            {
+                key: "/quan-tri-vien/xa",
+                label: "Xã / Phường",
+                permissions: ["xa:read", "xa:update", "xa:delete", 'xa:create'],
+            },
         ],
     },
     {
-        key: '/quan-tri-vien/tep-tin',
-        label: 'Tệp tin',
-        icon: <SafetyOutlined/>,
-
-    }
+        key: "he-thong",
+        label: "Hệ thống",
+        icon: <SettingOutlined />,
+        children: [
+            {
+                key: "/quan-tri-vien/tham-so",
+                label: "Tham số",
+                permissions: ["param:read", "param:update", "param:delete", 'param:create'],
+            },
+        ],
+    },
 ];
 
-export default function RootLayout({children}) {
-    const [collapsed, setCollapsed] = useState(false);
-    const [userInfo, setUserInfo] = useState(null);
-    const router = useRouter();
+/* ================= UTILS ================= */
 
-    const {token: {colorBgContainer, borderRadiusLG}} = theme.useToken();
-    const {SetIsUpdatePassOpen, setIsEditOpen, isEditOpen} = useModal();
+// gom permission từ children
+const collectPermissionsFromChildren = (children = []) => {
+    const set = new Set();
 
-    // Fetch userInfo & auth check
-    useEffect(() => {
-        const info = JSON.parse(localStorage.getItem('userInfo') || "{}");
-
-        if (!info?.roles || !info.roles?.includes('ADMIN')) {
-            router.replace('/login');
-            return;
-        }
-        setUserInfo(info);
-    }, [router, isEditOpen]);
-
-    if (!userInfo) return null; // tránh render trước khi có user
-
-    const userRole = roleTrans[userInfo.role] || "Người dùng";
-    const userName = userInfo.hoTen || "Người dùng";
-
-    const handleLogout = () => {
-        localStorage.removeItem("jwtToken");
-        localStorage.removeItem("userInfo");
-        router.push('/login');
+    const walk = (items) => {
+        items.forEach(i => {
+            if (Array.isArray(i.permissions)) {
+                i.permissions.forEach(p => set.add(p));
+            }
+            if (i.children) walk(i.children);
+        });
     };
 
-    const userMenu = (
-        <Menu
-            items={[
-                {
-                    key: "profile",
-                    label: "Thông tin tài khoản",
-                    icon: <UserOutlined/>,
-                    onClick: () => setIsEditOpen(),
-                },
-                {
-                    key: "password",
-                    label: "Đổi mật khẩu",
-                    icon: <SafetyOutlined/>,
-                    onClick: () => SetIsUpdatePassOpen(),
-                },
-                {
-                    key: "logout",
-                    label: "Đăng xuất",
-                    icon: <LogoutOutlined/>,
-                    onClick: handleLogout,
-                },
-            ]}
-        />
+    walk(children);
+    return Array.from(set);
+};
+
+// chuẩn hoá menu (parent tự có permission)
+const normalizeMenu = (menus) =>
+    menus.map(m => {
+        if (m.children?.length) {
+            return {
+                ...m,
+                permissions: collectPermissionsFromChildren(m.children),
+                children: normalizeMenu(m.children),
+            };
+        }
+        return m;
+    });
+
+/* ================= COMPONENT ================= */
+
+export default function RootLayout({ children }) {
+    const [collapsed, setCollapsed] = useState(false);
+    const [checked, setChecked] = useState(false);
+
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const {
+        token: { colorBgContainer, borderRadiusLG },
+    } = theme.useToken();
+
+    const { SetIsUpdatePassOpen, setIsEditOpen } = useModal();
+    const { user, clearAuth } = useAuthStore();
+    const { hasAnyPermission } = usePermission();
+
+    /* ================= MENU SAU KHI CHUẨN HOÁ ================= */
+
+    const normalizedMenu = useMemo(
+        () => normalizeMenu(menuConfig),
+        []
     );
+
+    const menuItems = useMemo(() => {
+        const filterMenu = (menus) =>
+            menus
+                .filter(
+                    m =>
+                        !m.permissions ||
+                        m.permissions.length === 0 ||
+                        hasAnyPermission(m.permissions)
+                )
+                .map(m => ({
+                    ...m,
+                    children: m.children ? filterMenu(m.children) : undefined,
+                }));
+
+        return filterMenu(normalizedMenu);
+    }, [user]);
+
+    /* ================= CHECK URL PERMISSION ================= */
+
+    useEffect(() => {
+        if (!user) return;
+
+        const allRoutes = [];
+        const collectRoutes = (menus) => {
+            menus.forEach(m => {
+                if (m.key?.startsWith("/")) allRoutes.push(m);
+                if (m.children) collectRoutes(m.children);
+            });
+        };
+
+        collectRoutes(normalizedMenu);
+
+        const matched = allRoutes.find(r => pathname.startsWith(r.key));
+
+        // PUBLIC → cho qua
+        if (!matched?.permissions || matched.permissions.length === 0) {
+            setChecked(true);
+            return;
+        }
+
+        // Không đủ quyền → chặn
+        if (!hasAnyPermission(matched.permissions)) {
+            clearAuth();
+            router.replace("/login"); // hoặc /403
+            return;
+        }
+
+        setChecked(true);
+    }, [user, pathname]);
+
+    if (!checked) return null;
+
+    /* ================= HANDLERS ================= */
+
+    const handleLogout = () => {
+        clearAuth();
+        router.replace("/login");
+    };
+
+    const userMenuItems = [
+        {
+            key: "profile",
+            label: "Thông tin tài khoản",
+            icon: <UserOutlined />,
+            onClick: setIsEditOpen,
+        },
+        {
+            key: "password",
+            label: "Đổi mật khẩu",
+            icon: <SafetyOutlined />,
+            onClick: SetIsUpdatePassOpen,
+        },
+        {
+            key: "logout",
+            label: "Đăng xuất",
+            icon: <LogoutOutlined />,
+            onClick: handleLogout,
+        },
+    ];
+
+    /* ================= RENDER ================= */
 
     return (
         <Layout>
-
-            {/* SIDEBAR */}
             <Sider
-                width={300}
+                width={250}
                 collapsible
                 collapsed={collapsed}
                 trigger={null}
                 style={{
-                    maxHeight: "100vh",
                     height: "100vh",
                     background: "white",
                     overflowY: "auto",
                 }}
             >
                 {!collapsed && (
-                    <div className="text-black text-2xl pb-10 text-center p-2 font-black bg-white">
-                        Sổ chủ nhiệm điện tử
+                    <div className="font-['Times_New_Roman'] text-lg text-center p-2 text-white bg-[#1677ff]">
+                        THƯƠNG MẠI ĐIỆN TỬ
                     </div>
                 )}
 
                 <Menu
-                    style={{fontSize: 18}}
                     mode="inline"
-                    items={adminMenuItems}
-                    onClick={({key}) => key.startsWith("/") && router.push(key)}
+                    items={menuItems}
+                    onClick={({ key }) =>
+                        key.startsWith("/") && router.push(key)
+                    }
                 />
             </Sider>
 
-            {/* MAIN CONTENT */}
             <Layout>
-
-                {/* HEADER */}
                 <Header
                     className="flex justify-between items-center"
-                    style={{background: colorBgContainer, paddingLeft: 0}}
+                    style={{ background: colorBgContainer, paddingLeft: 10 }}
                 >
-                    <div className="flex items-center gap-4">
-                        <Button
-                            type="text"
-                            icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
-                            onClick={() => setCollapsed(!collapsed)}
-                            style={{fontSize: 16, width: 64, height: 64}}
-                        />
-                        <Typography.Text style={{fontSize: 18}}>
-                            Quản trị viên
-                        </Typography.Text>
-                    </div>
+                    <Button
+                        type="text"
+                        icon={
+                            collapsed ? (
+                                <MenuUnfoldOutlined />
+                            ) : (
+                                <MenuFoldOutlined />
+                            )
+                        }
+                        onClick={() => setCollapsed(!collapsed)}
+                    />
 
-                    <Dropdown overlay={userMenu} placement="bottomRight">
+                    <Dropdown
+                        menu={{ items: userMenuItems }}
+                        placement="bottomRight"
+                    >
                         <div className="flex items-center gap-2 cursor-pointer">
-                            <Avatar src={userInfo.avatar} size="large" icon={<UserOutlined/>}/>
-                            <Typography.Text className="font-medium text-lg">
-                                {userName}
+                            <Avatar
+                                src={user?.avatar}
+                                icon={<UserOutlined />}
+                            />
+                            <Typography.Text className="font-medium">
+                                {user?.hoTen || "Người dùng"}
                             </Typography.Text>
                         </div>
                     </Dropdown>
                 </Header>
 
-                {/* PAGE CONTENT */}
                 <Content
                     style={{
                         margin: "24px 16px",
                         padding: 24,
-                        minHeight: 280,
                         background: colorBgContainer,
                         borderRadius: borderRadiusLG,
                     }}
                 >
                     {children}
                 </Content>
-
             </Layout>
         </Layout>
     );

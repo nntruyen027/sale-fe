@@ -1,10 +1,17 @@
 'use client';
 
-import {useEffect, useRef, useState} from "react";
-import {App, Button, Dropdown, Form, Input, Modal, Table} from "antd";
-import {DeleteOutlined, EditOutlined, EllipsisOutlined} from "@ant-design/icons";
-import {importTinh, layDsTinh, layFileImport, suaTinh, themTinh, xoaTinh} from "@/services/quan-tri-vien/tinh";
+import {useEffect, useState} from "react";
+import {App, Button, Dropdown, Form, Input, Modal, Table, Tag} from "antd";
+import {DeleteOutlined, EditOutlined, EllipsisOutlined, SafetyOutlined} from "@ant-design/icons";
+import {
+    layDsNguoiDung,
+    phanVaiTro,
+    suaNguoiDung,
+    themNguoiDung,
+    xoaNguoiDung
+} from "@/services/quan-tri-vien/nguoi-dung";
 import {useDebounce} from "@/hook/data";
+import PhanQuyenModal from "./PhanQuyenModal";
 import {usePermission} from "@/hook/usePermission";
 
 
@@ -20,22 +27,21 @@ export default function Page() {
     const [pagination, setPagination] = useState({current: 1, pageSize: 10, total: 0});
 
     const [modalVisible, setModalVisible] = useState(false);
-    const [editingTinh, setEditingTinh] = useState(null);
+    const [modalPhanQuyenVisible, setModalPhanQuyenVisible] = useState(false);
+    const [editingNguoiDung, setEditingNguoiDung] = useState(null);
 
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
 
-    const [importing, setImporting] = useState(false);
-    const {hasPermission} = usePermission()
 
     // Search
     const [searchText, setSearchText] = useState("");
     const debouncedSearch = useDebounce(searchText, 400);
+    const {hasPermission} = usePermission()
 
     // -----------------------------
     // REF + FORM
     // -----------------------------
-    const fileInputRef = useRef(null);
     const [form] = Form.useForm();
 
     // -----------------------------
@@ -44,7 +50,7 @@ export default function Page() {
     const fetchData = async (page = 1, pageSize = 10, search = "") => {
         setLoading(true);
         try {
-            const res = await layDsTinh({page, limit: pageSize, search});
+            const res = await layDsNguoiDung({page, limit: pageSize, search});
             setData(res.data || []);
 
             setPagination({
@@ -53,7 +59,7 @@ export default function Page() {
                 total: res.totalElements || 0,
             });
         } catch (e) {
-            message.error(e.message || "Lỗi khi tải danh sách tỉnh");
+            message.error(e.message || "Lỗi khi tải danh sách người dùng");
         } finally {
             setLoading(false);
         }
@@ -73,18 +79,30 @@ export default function Page() {
     // -----------------------------
     const handleOk = async () => {
         try {
-            const values = await form.validateFields();
+            let values = await form.validateFields();
 
-            if (editingTinh) {
-                await suaTinh(editingTinh.id, values);
+            console.log('values', values);
+            let body;
+            if (!values.password) {
+                body = {
+                    ...values,
+                    password: '',
+                }
+            } else {
+                body = values;
+            }
+
+
+            if (editingNguoiDung) {
+                await suaNguoiDung(editingNguoiDung.id, body);
                 message.success("Cập nhật thành công");
             } else {
-                await themTinh(values);
-                message.success("Thêm tỉnh thành công");
+                await themNguoiDung(body);
+                message.success("Thêm người dùng thành công");
             }
 
             setModalVisible(false);
-            setEditingTinh(null);
+            setEditingNguoiDung(null);
             form.resetFields();
             fetchData(pagination.current, pagination.pageSize, debouncedSearch);
 
@@ -94,10 +112,31 @@ export default function Page() {
     };
 
     const handleEdit = (record) => {
-        setEditingTinh(record);
+        setEditingNguoiDung(record);
         form.setFieldsValue(record);
         setModalVisible(true);
     };
+
+    const handlePhanQuyen = (record) => {
+        setEditingNguoiDung(record);
+        setModalPhanQuyenVisible(true);
+    };
+
+    const submitPhanQuyen = (dsMaQuyen) => {
+        phanVaiTro(editingNguoiDung.id, {dsMaQuyen})
+            .then(() => {
+                setModalPhanQuyenVisible(false)
+                message.success("Phân quyền thành công!");
+            })
+            .catch((e) => {
+                setModalPhanQuyenVisible(false);
+                message.error("Phân quyền thất bại! " + e.message);
+            })
+            .finally(() => {
+                fetchData(pagination.current, pagination.pageSize, debouncedSearch);
+            })
+        ;
+    }
 
     // -----------------------------
     // HANDLERS: DELETE
@@ -109,7 +148,7 @@ export default function Page() {
 
     const confirmDelete = async () => {
         try {
-            await xoaTinh(deletingId);
+            await xoaNguoiDung(deletingId);
             message.success("Xóa thành công");
 
             if (data.length === 1 && pagination.current > 1)
@@ -126,37 +165,6 @@ export default function Page() {
     };
 
     // -----------------------------
-    // HANDLERS: IMPORT / TEMPLATE
-    // -----------------------------
-    const handleDownloadTemplate = async () => {
-        try {
-            await layFileImport();
-        } catch (e) {
-            message.error(e.message);
-        }
-    };
-
-    const handleImportFile = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-            setImporting(true);
-            await importTinh(formData);
-
-            message.success("Import thành công");
-            fetchData(pagination.current, pagination.pageSize, debouncedSearch);
-
-        } catch (err) {
-            message.error(err.message || "Lỗi import");
-        } finally {
-            setImporting(false);
-            e.target.value = null;
-        }
-    };
 
     // -----------------------------
     // TABLE COLUMNS
@@ -170,8 +178,15 @@ export default function Page() {
             render: (text, record, index) =>
                 (pagination.current - 1) * pagination.pageSize + index + 1
         },
-        {title: "Tên tỉnh", dataIndex: "ten", key: "ten"},
-        {title: "Ghi chú", dataIndex: "ghiChu", key: "ghiChu"},
+        {title: "Họ tên", dataIndex: "hoTen", key: "hoTen"},
+        {title: "Tên tài khoản", dataIndex: "username", key: "username"},
+        {title: "Thư điện tử", dataIndex: "email", key: "email"},
+        {
+            title: "Trạng thái",
+            dataIndex: "isActive",
+            key: "isActive",
+            render: (text) => text ? <Tag color={'processing'}>Hoạt động</Tag> : <Tag color={'error'}>Khóa</Tag>
+        },
         {
             title: "Thao tác",
             key: "thaoTac",
@@ -179,17 +194,21 @@ export default function Page() {
             fixed: "right",
             render: (_, record) => {
                 const items = []
-
-                if (hasPermission('tinh:update')) {
+                if (hasPermission('user:update')) {
                     items.push({
                         key: "sua",
                         label: "Cập nhật",
                         onClick: () => handleEdit(record),
-                        icon: <EditOutlined/>,
+                        icon: <EditOutlined/>
                     })
-
+                    items.push({
+                        key: "phan-vai-tro",
+                        label: "Phân quyền",
+                        onClick: () => handlePhanQuyen(record),
+                        icon: <SafetyOutlined/>
+                    })
                 }
-                if (hasPermission('tinh:delete')) {
+                if (hasPermission('user:delete')) {
                     items.push({
                         key: "xoa",
                         label: "Xóa",
@@ -199,6 +218,7 @@ export default function Page() {
                     })
                 }
 
+                
                 return (
                     <Dropdown menu={{items}} trigger={['click']}>
                         <Button type="text" icon={<EllipsisOutlined/>}/>
@@ -226,7 +246,7 @@ export default function Page() {
             >
                 {/* LEFT: SEARCH */}
                 <Input.Search
-                    placeholder="Tìm tỉnh..."
+                    placeholder="Tìm người dùng..."
                     allowClear
                     style={{width: 300}}
                     onChange={(e) => setSearchText(e.target.value)}
@@ -235,32 +255,17 @@ export default function Page() {
                 {/* RIGHT: BUTTONS */}
                 <div style={{display: "flex", gap: 8}}>
                     <Button
-                        hidden={!hasPermission('tinh:create')}
+                        hidden={!hasPermission('user:create')}
                         type="primary"
                         onClick={() => {
                             setModalVisible(true);
-                            setEditingTinh(null);
+                            setEditingNguoiDung(null);
                             form.resetFields();
                         }}
                     >
-                        Thêm tỉnh
+                        Thêm người dùng
                     </Button>
 
-                    <Button hidden={!hasPermission('tinh:create')} onClick={handleDownloadTemplate}>Tải file
-                        mẫu</Button>
-
-                    <Button hidden={!hasPermission('tinh:create')} onClick={() => fileInputRef.current.click()}
-                            loading={importing}>
-                        Import file
-                    </Button>
-
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        style={{display: "none"}}
-                        accept=".xlsx"
-                        onChange={handleImportFile}
-                    />
                 </div>
             </div>
 
@@ -272,35 +277,52 @@ export default function Page() {
                 dataSource={data}
                 loading={loading}
                 pagination={pagination}
-                onChange={(pag) => fetchData(pag.current, pag.pageSize, debouncedSearch)}
                 scroll={{x: "max-content"}}
-
+                onChange={(pag) => fetchData(pag.current, pag.pageSize, debouncedSearch)}
             />
 
             {/* ADD/EDIT MODAL */}
             <Modal
-                title={editingTinh ? "Sửa tỉnh" : "Thêm tỉnh"}
+                title={editingNguoiDung ? "Sửa người dùng" : "Thêm người dùng"}
                 open={modalVisible}
                 onOk={handleOk}
                 onCancel={() => {
                     setModalVisible(false);
                     form.resetFields();
-                    setEditingTinh(null);
+                    setEditingNguoiDung(null);
                 }}
-                okText={!editingTinh ? 'Thêm' : 'Cập nhật'}
+                okText={!editingNguoiDung ? 'Thêm' : 'Cập nhật'}
                 cancelText={'Thoát'}
             >
 
                 <Form form={form} layout="vertical" initialValues={{ten: ""}}>
                     <Form.Item
-                        label="Tên tỉnh"
-                        name="ten"
-                        rules={[{required: true, message: "Vui lòng nhập tên tỉnh"}]}
+                        label="Họ tên"
+                        name="hoTen"
+                        rules={[{required: true, message: "Vui lòng nhập họ tên"}]}
                     >
                         <Input/>
                     </Form.Item>
 
-                    <Form.Item label="Ghi chú" name="ghiChu">
+                    <Form.Item
+                        label="Tên người dùng"
+                        name="username"
+                        rules={[{required: true, message: "Vui lòng nhập tên tài khoản"}]}
+                    >
+                        <Input/>
+                    </Form.Item>
+
+                    <Form.Item
+                        label="Thư điện tử"
+                        name="email"
+                        rules={[{required: true, message: "Vui lòng nhập email"}]}
+                    >
+                        <Input/>
+                    </Form.Item>
+                    <Form.Item
+                        label="Mật khẩu"
+                        name="password"
+                    >
                         <Input/>
                     </Form.Item>
                 </Form>
@@ -310,7 +332,6 @@ export default function Page() {
             <Modal
                 title="Xác nhận xóa"
                 open={deleteModalVisible}
-
                 onOk={confirmDelete}
                 onCancel={() => {
                     setDeleteModalVisible(false);
@@ -320,8 +341,19 @@ export default function Page() {
                 okText={'Xóa'}
                 cancelText={'Thoát'}
             >
-                Bạn có chắc muốn xóa tỉnh này không?
+                Bạn có chắc muốn xóa người dùng này không?
             </Modal>
+
+            <PhanQuyenModal
+                modalVisible={modalPhanQuyenVisible}
+                handleCancel={() => {
+                    setModalPhanQuyenVisible(false);
+                    setEditingNguoiDung(null);
+                }}
+                onOk={submitPhanQuyen}
+                object={editingNguoiDung}
+
+            />
         </div>
     );
 }

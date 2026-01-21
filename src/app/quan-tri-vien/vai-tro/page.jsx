@@ -1,10 +1,11 @@
 'use client';
 
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import {App, Button, Dropdown, Form, Input, Modal, Table} from "antd";
-import {DeleteOutlined, EditOutlined, EllipsisOutlined} from "@ant-design/icons";
-import {importTinh, layDsTinh, layFileImport, suaTinh, themTinh, xoaTinh} from "@/services/quan-tri-vien/tinh";
+import {DeleteOutlined, EditOutlined, EllipsisOutlined, SafetyOutlined} from "@ant-design/icons";
+import {layDsVaiTro, phanQuyen, suaVaiTro, themVaiTro, xoaVaiTro} from "@/services/quan-tri-vien/vai-tro";
 import {useDebounce} from "@/hook/data";
+import PhanQuyenModal from "@/app/quan-tri-vien/vai-tro/PhanQuyenModal";
 import {usePermission} from "@/hook/usePermission";
 
 
@@ -20,22 +21,20 @@ export default function Page() {
     const [pagination, setPagination] = useState({current: 1, pageSize: 10, total: 0});
 
     const [modalVisible, setModalVisible] = useState(false);
-    const [editingTinh, setEditingTinh] = useState(null);
+    const [editingVaiTro, setEditingVaiTro] = useState(null);
+    const [modalPhanQuyenVisible, setModalPhanQuyenVisible] = useState(false);
 
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
-
-    const [importing, setImporting] = useState(false);
-    const {hasPermission} = usePermission()
 
     // Search
     const [searchText, setSearchText] = useState("");
     const debouncedSearch = useDebounce(searchText, 400);
 
+    const {hasPermission} = usePermission()
     // -----------------------------
     // REF + FORM
     // -----------------------------
-    const fileInputRef = useRef(null);
     const [form] = Form.useForm();
 
     // -----------------------------
@@ -44,7 +43,7 @@ export default function Page() {
     const fetchData = async (page = 1, pageSize = 10, search = "") => {
         setLoading(true);
         try {
-            const res = await layDsTinh({page, limit: pageSize, search});
+            const res = await layDsVaiTro({page, limit: pageSize, search});
             setData(res.data || []);
 
             setPagination({
@@ -53,7 +52,7 @@ export default function Page() {
                 total: res.totalElements || 0,
             });
         } catch (e) {
-            message.error(e.message || "Lỗi khi tải danh sách tỉnh");
+            message.error(e.message || "Lỗi khi tải danh sách vai trò");
         } finally {
             setLoading(false);
         }
@@ -75,16 +74,16 @@ export default function Page() {
         try {
             const values = await form.validateFields();
 
-            if (editingTinh) {
-                await suaTinh(editingTinh.id, values);
+            if (editingVaiTro) {
+                await suaVaiTro(editingVaiTro.id, values);
                 message.success("Cập nhật thành công");
             } else {
-                await themTinh(values);
-                message.success("Thêm tỉnh thành công");
+                await themVaiTro(values);
+                message.success("Thêm vai trò thành công");
             }
 
             setModalVisible(false);
-            setEditingTinh(null);
+            setEditingVaiTro(null);
             form.resetFields();
             fetchData(pagination.current, pagination.pageSize, debouncedSearch);
 
@@ -94,10 +93,29 @@ export default function Page() {
     };
 
     const handleEdit = (record) => {
-        setEditingTinh(record);
+        setEditingVaiTro(record);
         form.setFieldsValue(record);
         setModalVisible(true);
     };
+
+
+    const handlePhanQuyen = (record) => {
+        setEditingVaiTro(record);
+        setModalPhanQuyenVisible(true);
+    }
+
+    const submitPhanQuyen = (dsMaQuyen) => {
+        phanQuyen(editingVaiTro.id, {dsMaQuyen})
+            .then(() => {
+                setEditingVaiTro(null);
+                message.success('Phân quyền thành công')
+            })
+            .catch(error => message.error('Phân quyên thất bại! ' + error.message))
+            .finally(() => {
+                setModalPhanQuyenVisible(false);
+                fetchData(pagination.current, pagination.pageSize, debouncedSearch);
+            })
+    }
 
     // -----------------------------
     // HANDLERS: DELETE
@@ -109,7 +127,7 @@ export default function Page() {
 
     const confirmDelete = async () => {
         try {
-            await xoaTinh(deletingId);
+            await xoaVaiTro(deletingId);
             message.success("Xóa thành công");
 
             if (data.length === 1 && pagination.current > 1)
@@ -126,37 +144,6 @@ export default function Page() {
     };
 
     // -----------------------------
-    // HANDLERS: IMPORT / TEMPLATE
-    // -----------------------------
-    const handleDownloadTemplate = async () => {
-        try {
-            await layFileImport();
-        } catch (e) {
-            message.error(e.message);
-        }
-    };
-
-    const handleImportFile = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-            setImporting(true);
-            await importTinh(formData);
-
-            message.success("Import thành công");
-            fetchData(pagination.current, pagination.pageSize, debouncedSearch);
-
-        } catch (err) {
-            message.error(err.message || "Lỗi import");
-        } finally {
-            setImporting(false);
-            e.target.value = null;
-        }
-    };
 
     // -----------------------------
     // TABLE COLUMNS
@@ -170,8 +157,8 @@ export default function Page() {
             render: (text, record, index) =>
                 (pagination.current - 1) * pagination.pageSize + index + 1
         },
-        {title: "Tên tỉnh", dataIndex: "ten", key: "ten"},
-        {title: "Ghi chú", dataIndex: "ghiChu", key: "ghiChu"},
+        {title: "Tên vai trò", dataIndex: "name", key: "name"},
+        {title: "Mã vai trò", dataIndex: "code", key: "code"},
         {
             title: "Thao tác",
             key: "thaoTac",
@@ -180,16 +167,21 @@ export default function Page() {
             render: (_, record) => {
                 const items = []
 
-                if (hasPermission('tinh:update')) {
+                if (hasPermission('role:update')) {
                     items.push({
                         key: "sua",
                         label: "Cập nhật",
                         onClick: () => handleEdit(record),
                         icon: <EditOutlined/>,
                     })
-
+                    items.push({
+                        key: "phan_quyen",
+                        label: "Phân quyền",
+                        onClick: () => handlePhanQuyen(record),
+                        icon: <SafetyOutlined/>
+                    })
                 }
-                if (hasPermission('tinh:delete')) {
+                if (hasPermission('role:delete')) {
                     items.push({
                         key: "xoa",
                         label: "Xóa",
@@ -198,7 +190,6 @@ export default function Page() {
                         danger: true
                     })
                 }
-
                 return (
                     <Dropdown menu={{items}} trigger={['click']}>
                         <Button type="text" icon={<EllipsisOutlined/>}/>
@@ -226,7 +217,7 @@ export default function Page() {
             >
                 {/* LEFT: SEARCH */}
                 <Input.Search
-                    placeholder="Tìm tỉnh..."
+                    placeholder="Tìm vai trò..."
                     allowClear
                     style={{width: 300}}
                     onChange={(e) => setSearchText(e.target.value)}
@@ -235,32 +226,17 @@ export default function Page() {
                 {/* RIGHT: BUTTONS */}
                 <div style={{display: "flex", gap: 8}}>
                     <Button
-                        hidden={!hasPermission('tinh:create')}
+                        hidden={!hasPermission('role:create')}
                         type="primary"
                         onClick={() => {
                             setModalVisible(true);
-                            setEditingTinh(null);
+                            setEditingVaiTro(null);
                             form.resetFields();
                         }}
                     >
-                        Thêm tỉnh
+                        Thêm vai trò
                     </Button>
 
-                    <Button hidden={!hasPermission('tinh:create')} onClick={handleDownloadTemplate}>Tải file
-                        mẫu</Button>
-
-                    <Button hidden={!hasPermission('tinh:create')} onClick={() => fileInputRef.current.click()}
-                            loading={importing}>
-                        Import file
-                    </Button>
-
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        style={{display: "none"}}
-                        accept=".xlsx"
-                        onChange={handleImportFile}
-                    />
                 </div>
             </div>
 
@@ -272,35 +248,39 @@ export default function Page() {
                 dataSource={data}
                 loading={loading}
                 pagination={pagination}
-                onChange={(pag) => fetchData(pag.current, pag.pageSize, debouncedSearch)}
                 scroll={{x: "max-content"}}
-
+                onChange={(pag) => fetchData(pag.current, pag.pageSize, debouncedSearch)}
             />
 
             {/* ADD/EDIT MODAL */}
             <Modal
-                title={editingTinh ? "Sửa tỉnh" : "Thêm tỉnh"}
+                title={editingVaiTro ? "Sửa vai trò" : "Thêm vai trò"}
                 open={modalVisible}
                 onOk={handleOk}
                 onCancel={() => {
                     setModalVisible(false);
                     form.resetFields();
-                    setEditingTinh(null);
+                    setEditingVaiTro(null);
                 }}
-                okText={!editingTinh ? 'Thêm' : 'Cập nhật'}
+                okText={!editingVaiTro ? 'Thêm' : 'Cập nhật'}
                 cancelText={'Thoát'}
             >
 
                 <Form form={form} layout="vertical" initialValues={{ten: ""}}>
                     <Form.Item
-                        label="Tên tỉnh"
-                        name="ten"
-                        rules={[{required: true, message: "Vui lòng nhập tên tỉnh"}]}
+                        label="Tên vai trò"
+                        name="name"
+                        rules={[{required: true, message: "Vui lòng nhập tên vai trò"}]}
                     >
                         <Input/>
                     </Form.Item>
 
-                    <Form.Item label="Ghi chú" name="ghiChu">
+                    <Form.Item
+                        label="Mã"
+                        name="code"
+                        normalize={(value) => value?.toUpperCase()}
+                        rules={[{required: true, message: "Vui lòng nhập mã vai trò"}]}
+                    >
                         <Input/>
                     </Form.Item>
                 </Form>
@@ -310,7 +290,6 @@ export default function Page() {
             <Modal
                 title="Xác nhận xóa"
                 open={deleteModalVisible}
-
                 onOk={confirmDelete}
                 onCancel={() => {
                     setDeleteModalVisible(false);
@@ -320,8 +299,17 @@ export default function Page() {
                 okText={'Xóa'}
                 cancelText={'Thoát'}
             >
-                Bạn có chắc muốn xóa tỉnh này không?
+                Bạn có chắc muốn xóa vai trò này không?
             </Modal>
+            <PhanQuyenModal
+                onOk={submitPhanQuyen}
+                modalVisible={modalPhanQuyenVisible}
+                object={editingVaiTro}
+                handleCancel={() => {
+                    setModalPhanQuyenVisible(false);
+                    setEditingVaiTro(null);
+                }}/>
+
         </div>
     );
 }

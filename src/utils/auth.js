@@ -1,39 +1,37 @@
 import axios from "axios";
-
-export function getToken() {
-    return localStorage.getItem('jwtToken');
-}
+import { useAuthStore } from "@/store/auth";
 
 export function isTokenExpired(token) {
     if (!token) return true;
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         return Date.now() >= payload.exp * 1000;
-    } catch (e) {
+    } catch {
         return true;
     }
 }
 
-
 export async function isTokenValid() {
-    const token = getToken();
-    if (!token) return false;
+    const { token, setAuth, clearAuth } = useAuthStore.getState();
+
+    if (!token) {
+        clearAuth();
+        return false;
+    }
 
     try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_BE}/auth/me`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const res = await axios.get(
+            `${process.env.NEXT_PUBLIC_BE}/auth/me`,
+            {
+                headers: { Authorization: `Bearer ${token}` }
+            }
+        );
 
-        const user = res.data;
-        localStorage.setItem('userInfo', JSON.stringify(user));
-
+        setAuth(res.data, token);
         return true;
-    } catch (err) {
-        console.error('Token invalid or expired', err);
-        localStorage.removeItem('jwtToken');
-        localStorage.removeItem('userInfo');
+
+    } catch {
+        clearAuth();
         return false;
     }
 }

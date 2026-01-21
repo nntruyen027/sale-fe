@@ -1,56 +1,59 @@
 "use client";
 
-import {App} from "antd";
-import {usePathname, useRouter} from "next/navigation";
-import {useEffect} from "react";
-import {useModal} from "@/store/modal";
-import {isTokenValid} from "@/utils/auth";
-import DoiMatKhauModal from "./DoiMatKhauModal";
-import DoiThongTinModal from "@/app/DoiThongTinModal";
-import DynamicFavicon from "@/hook/useDynamicFavicon";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth";
+import { getMe } from "@/services/auth";
 
-export default function InnerLayout({children}) {
-
-    const {message} = App.useApp();
+export default function InnerLayout({ children }) {
     const router = useRouter();
     const pathname = usePathname();
-    const {isUpdatePassOpen, SetIsUpdatePassClose, isEditOpen, setIsEditClose} = useModal();
+
+    const { user, setAuth, clearAuth } = useAuthStore();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            const valid = await isTokenValid();
-
-            if (!valid && pathname !== "/login") {
-                router.replace("/login");
+        const initAuth = async () => {
+            // 🔥 không check auth ở trang login
+            if (pathname === "/login") {
+                setLoading(false);
                 return;
             }
 
-            if (valid && pathname === "/login") {
-                const user = JSON.parse(localStorage.getItem("userInfo"));
-                if (!user) return;
+            const token = localStorage.getItem("jwtToken");
+            const userLocal = localStorage.getItem("userInfo");
 
-                if (user.roles?.includes("ADMIN")) router.replace("/quan-tri-vien/dashboard");
-                else if (user.roles?.includes("TEACHER")) router.replace("/giao-vien/dashboard");
-                else if (user.roles?.includes("PARENT")) router.replace("/phu-huynh/dashboard");
-                else router.replace("/hoc-sinh/dashboard");
+            // ❌ chưa login
+            if (!token || !userLocal) {
+                clearAuth();
+                router.replace("/login");
+                setLoading(false);
+                return;
             }
+
+            // ✅ đã có localStorage nhưng store chưa có (F5)
+            if (!user) {
+                try {
+                    // optional: gọi lại /me để đảm bảo user mới nhất
+                    const me = await getMe();
+
+                    setAuth({
+                        token,
+                        user: me,
+                    });
+                } catch (e) {
+                    clearAuth();
+                    router.replace("/login");
+                }
+            }
+
+            setLoading(false);
         };
 
-        checkAuth();
-    }, [pathname, router]);
+        initAuth();
+    }, []); // ⛔ CHỈ CHẠY 1 LẦN
 
-    return (
-        <>
-            <DynamicFavicon/>
-            <DoiMatKhauModal
-                open={isUpdatePassOpen}
-                onClose={SetIsUpdatePassClose}
-            />
-            <DoiThongTinModal
-                open={isEditOpen}
-                onClose={setIsEditClose}
-            />
-            {children}
-        </>
-    );
+    if (loading) return null;
+
+    return <>{children}</>;
 }

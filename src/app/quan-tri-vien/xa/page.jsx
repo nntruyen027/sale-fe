@@ -5,14 +5,15 @@ import {App, Button, Dropdown, Form, Input, Modal, Select, Table} from "antd";
 import {importXa, layDsXa, layFileImport, suaXa, themXa, xoaXa} from "@/services/quan-tri-vien/xa";
 import {getTinh} from "@/services/auth";
 import {useDebounce} from "@/hook/data";
-import {EllipsisOutlined} from "@ant-design/icons";
+import {DeleteOutlined, EditOutlined, EllipsisOutlined} from "@ant-design/icons";
+import {usePermission} from "@/hook/usePermission";
 
 export default function Page() {
 
     /* --------------------------------------------
      * 1. STATE
      * -------------------------------------------- */
-    const {message} = App.useApp()
+    const {message} = App.useApp();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({current: 1, pageSize: 10, total: 0});
@@ -28,17 +29,17 @@ export default function Page() {
     const [dsTinh, setDsTinh] = useState([]);
     const [searchTinh, setSearchTinh] = useState("");
     const [tinhPagi, setTinhPagi] = useState({page: 1, limit: 20, total: 0});
+
     const [searchText, setSearchText] = useState("");
-
-
     const debouncedSearch = useDebounce(searchText, 400);
+    const {hasPermission} = usePermission()
+
     /* --------------------------------------------
-     * 2. REFS
+     * 2. REFS & FORM
      * -------------------------------------------- */
     const searchTinhRef = useRef(null);
     const fileInputRef = useRef(null);
     const [form] = Form.useForm();
-
 
     /* --------------------------------------------
      * 3. TABLE COLUMNS
@@ -46,46 +47,51 @@ export default function Page() {
     const columns = [
         {
             title: "#",
-            key: "stt",
             width: 80,
             align: "right",
-            render: (text, record, index) =>
+            render: (_, __, index) =>
                 (pagination.current - 1) * pagination.pageSize + index + 1
         },
-
-        {title: "Tên xã", dataIndex: "ten", key: "ten"},
+        {title: "Tên xã", dataIndex: "ten"},
         {
             title: "Tên tỉnh",
             dataIndex: "tinh",
-            key: "tinh",
             render: (tinh) => tinh?.ten || ""
         },
-        {title: "Ghi chú", dataIndex: "ghiChu", key: "ghiChu"},
+        {title: "Ghi chú", dataIndex: "ghiChu"},
         {
             title: "Thao tác",
-            key: "thaoTac",
+            width: 100,
+            fixed: "right",
             render: (_, record) => {
-                const items = [
-                    {
+                const items = [];
+
+                if (hasPermission('xa:update')) {
+                    items.push({
                         key: "sua",
                         label: "Cập nhật",
                         onClick: () => handleEdit(record),
-                    },
-                    {
+                        icon: <EditOutlined/>,
+                    })
+                }
+                if (hasPermission('xa:delete')) {
+                    items.push({
                         key: "xoa",
                         label: "Xóa",
-                        onClick: () => handleDelete(record.id)
-                    }
-                ]
+                        onClick: () => handleDelete(record.id),
+                        icon: <DeleteOutlined/>,
+                        danger: true
+                    })
+                }
+
                 return (
-                    <Dropdown menu={{items}} trigger={['click']}>
+                    <Dropdown menu={{items}} trigger={["click"]}>
                         <Button type="text" icon={<EllipsisOutlined/>}/>
                     </Dropdown>
-                )
-            }
-        }
+                );
+            },
+        },
     ];
-
 
     /* --------------------------------------------
      * 4. FETCH DATA
@@ -112,19 +118,25 @@ export default function Page() {
         const result = await getTinh(searchTinh, page, tinhPagi.limit);
 
         setDsTinh(reset ? result.dsTinh : [...dsTinh, ...result.dsTinh]);
-        setTinhPagi({page, limit: tinhPagi.limit, total: result.total || 0});
+        setTinhPagi({
+            page,
+            limit: tinhPagi.limit,
+            total: result.total || 0,
+        });
     };
 
-
     /* --------------------------------------------
-     * 5. CRUD HANDLERS
+     * 5. CRUD
      * -------------------------------------------- */
     const handleEdit = (record) => {
         setEditingXa(record);
 
         form.setFieldsValue({
-            ...record,
-            tinhId: record.tinh?.id || null,
+            ten: record.ten,
+            ghiChu: record.ghiChu,
+            tinhId: record.tinh
+                ? {value: record.tinh.id, label: record.tinh.ten}
+                : null,
         });
 
         setModalVisible(true);
@@ -139,11 +151,16 @@ export default function Page() {
         try {
             const values = await form.validateFields();
 
+            const payload = {
+                ...values,
+                tinhId: values.tinhId.value, // ⚠️ lấy ID
+            };
+
             if (editingXa) {
-                await suaXa(editingXa.id, values);
+                await suaXa(editingXa.id, payload);
                 message.success("Cập nhật thành công");
             } else {
-                await themXa(values);
+                await themXa(payload);
                 message.success("Thêm xã thành công");
             }
 
@@ -151,15 +168,13 @@ export default function Page() {
             form.resetFields();
             setEditingXa(null);
             fetchData(pagination.current, pagination.pageSize);
-
         } catch (e) {
             message.error(e.message || "Lỗi");
         }
     };
 
-
     /* --------------------------------------------
-     * 6. DOWNLOAD / IMPORT FILE
+     * 6. IMPORT / DOWNLOAD
      * -------------------------------------------- */
     const handleDownloadTemplate = async () => {
         try {
@@ -189,9 +204,8 @@ export default function Page() {
         }
     };
 
-
     /* --------------------------------------------
-     * 7. INFINITE SCROLL SELECT TỈNH
+     * 7. INFINITE SCROLL SELECT
      * -------------------------------------------- */
     const handleTinhScroll = (e) => {
         const target = e.target;
@@ -203,9 +217,8 @@ export default function Page() {
         }
     };
 
-
     /* --------------------------------------------
-     * 8. USE EFFECTS
+     * 8. EFFECTS
      * -------------------------------------------- */
     useEffect(() => {
         fetchData();
@@ -217,9 +230,7 @@ export default function Page() {
 
     useEffect(() => {
         if (searchTinhRef.current) clearTimeout(searchTinhRef.current);
-
         searchTinhRef.current = setTimeout(() => fetchTinh(true), 300);
-
         return () => clearTimeout(searchTinhRef.current);
     }, [searchTinh]);
 
@@ -227,39 +238,27 @@ export default function Page() {
         if (tinhPagi.page > 1) fetchTinh(false);
     }, [tinhPagi.page]);
 
-
     /* --------------------------------------------
-     * 9. UI RENDER
+     * 9. UI
      * -------------------------------------------- */
     return (
         <div style={{padding: 16}}>
 
-            {/* SEARCH + ACTION BUTTONS */}
-            <div style={{
-                marginBottom: 16,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-            }}>
-                {/* SEARCH BOX */}
+            {/* SEARCH + ACTION */}
+            <div style={{marginBottom: 16, display: "flex", justifyContent: "space-between"}}>
                 <Input.Search
                     placeholder="Tìm kiếm xã..."
                     allowClear
                     style={{width: 300}}
                     onChange={(e) => setSearchText(e.target.value)}
-
                 />
 
-                {/* ACTION BUTTONS */}
                 <div style={{display: "flex", gap: 8}}>
-                    <Button
-                        type="primary"
-                        onClick={() => {
-                            setModalVisible(true);
-                            form.resetFields();
-                            setEditingXa(null);
-                        }}
-                    >
+                    <Button type="primary" hidden={!hasPermission('xa:create')} onClick={() => {
+                        setModalVisible(true);
+                        form.resetFields();
+                        setEditingXa(null);
+                    }}>
                         Thêm xã
                     </Button>
 
@@ -270,9 +269,9 @@ export default function Page() {
                     </Button>
 
                     <input
-                        type="file"
                         ref={fileInputRef}
-                        style={{display: "none"}}
+                        type="file"
+                        hidden
                         accept=".xlsx"
                         onChange={handleImportFile}
                     />
@@ -281,15 +280,17 @@ export default function Page() {
 
             {/* TABLE */}
             <Table
+                size={'small'}
                 rowKey="id"
                 columns={columns}
                 dataSource={data}
                 loading={loading}
                 pagination={pagination}
                 onChange={(pag) => fetchData(pag.current, pag.pageSize)}
+                scroll={{x: "max-content"}}
             />
 
-            {/* ADD / EDIT MODAL */}
+            {/* ADD / EDIT */}
             <Modal
                 title={editingXa ? "Sửa xã" : "Thêm xã"}
                 open={modalVisible}
@@ -299,6 +300,8 @@ export default function Page() {
                     form.resetFields();
                     setEditingXa(null);
                 }}
+                okText={!editingXa ? 'Thêm' : 'Cập nhật'}
+                cancelText={'Thoát'}
             >
                 <Form form={form} layout="vertical">
                     <Form.Item
@@ -316,10 +319,10 @@ export default function Page() {
                     >
                         <Select
                             showSearch
+                            labelInValue
                             placeholder="Chọn tỉnh/thành phố"
                             onSearch={setSearchTinh}
                             filterOption={false}
-                            dropdownStyle={{maxHeight: 200, overflowY: "auto"}}
                             onPopupScroll={handleTinhScroll}
                         >
                             {dsTinh.map(t => (
@@ -336,7 +339,7 @@ export default function Page() {
                 </Form>
             </Modal>
 
-            {/* DELETE CONFIRM MODAL */}
+            {/* DELETE */}
             <Modal
                 title="Xác nhận xóa"
                 open={deleteModalVisible}
@@ -344,14 +347,7 @@ export default function Page() {
                     try {
                         await xoaXa(deletingId);
                         message.success("Xóa thành công");
-
-                        if (data.length === 1 && pagination.current > 1)
-                            fetchData(pagination.current - 1, pagination.pageSize);
-                        else
-                            fetchData(pagination.current, pagination.pageSize);
-
-                    } catch (e) {
-                        message.error(e.message);
+                        fetchData(pagination.current, pagination.pageSize);
                     } finally {
                         setDeleteModalVisible(false);
                         setDeletingId(null);
@@ -361,6 +357,9 @@ export default function Page() {
                     setDeleteModalVisible(false);
                     setDeletingId(null);
                 }}
+                okButtonProps={{danger: true}}
+                okText={'Xóa'}
+                cancelText={'Thoát'}
             >
                 Bạn có chắc muốn xóa xã này không?
             </Modal>

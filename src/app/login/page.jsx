@@ -1,165 +1,117 @@
-'use client';
+"use client";
 
-import {Col, message, Row} from "antd";
-import {useForm} from "antd/es/form/Form";
-import {useEffect, useState} from "react";
-import {dangKyGiaoVien, login} from "@/services/auth";
+import { Form, Input, Button, App } from "antd";
+import { UserOutlined, LockOutlined } from "@ant-design/icons";
+import { useState } from "react";
+import { login } from "@/services/auth";
+import { useAuthStore } from "@/store/auth";
+import { useRouter } from "next/navigation";
 
-import LoginCarousel from "./LoginCarousel";
-import LoginForm from "./LoginForm";
-import RegisterForm from "./RegisterForm";
-import {useRouter} from "next/navigation";
+export default function Login() {
+    const [form] = Form.useForm();
+    const { message } = App.useApp();
+    const { setAuth } = useAuthStore();
+    const router = useRouter(); // ✅ hook đặt đúng chỗ
+    const [loading, setLoading] = useState(false);
 
-export default function LoginPage() {
-    const [api, contextHolder] = message.useMessage();
-    const [formLogin] = useForm();
-    const [formRegister] = useForm();
-    const router = useRouter();
+    const onLogin = async ({ username, password }) => {
+        setLoading(true);
 
-    const [isRegister, setIsRegister] = useState(false);
-    const [isSmallScreen, setIsSmallScreen] = useState(false);
-
-    // Detect screen size
-    useEffect(() => {
-        const handleResize = () => setIsSmallScreen(window.innerWidth <= 471);
-        handleResize();
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
-
-    const onFinishLogin = async () => {
         try {
-            const {token, user} = await login(formLogin.getFieldValue()?.username, formLogin.getFieldValue()?.password);
-            api.success("Đăng nhập thành công");
-            if (user.roles?.includes('TEACHER')) router.push("/giao-vien/dashboard");
-            else if (user.roles?.includes('ADMIN')) router.push("/quan-tri-vien/dashboard");
-            else router.push("/hoc-sinh/dashboard");
-        } catch (e) {
-            api.error(e.message);
+            const result = await login(username, password);
+
+            // ✅ LƯU ĐÚNG KEY (đồng bộ toàn app)
+            localStorage.setItem("jwtToken", result.token);
+            localStorage.setItem("userInfo", JSON.stringify(result.user));
+
+            // ✅ set vào zustand store
+            setAuth({
+                token: result.token,
+                user: result.user,
+            });
+
+            message.success("Đăng nhập thành công");
+
+            // ✅ redirect SAU khi setAuth xong
+            router.replace("/quan-tri-vien/dashboard");
+
+        } catch (err) {
+            message.error(err?.message || "Đăng nhập thất bại");
+        } finally {
+            setLoading(false);
         }
     };
-
-    const onFinishRegister = async () => {
-        try {
-            await dangKyGiaoVien({
-                    ...formRegister.getFieldValue(),
-                    ngaySinh: formRegister.getFieldValue().ngaySinh.format("YYYY-MM-DD")
-                }
-            );
-            api.success("Đăng ký thành công");
-            setIsRegister(false);
-        } catch (e) {
-            api.error(e.message);
-        }
-    };
-
-    if (isSmallScreen) {
-        return (
-            <>
-                {contextHolder}
-                <div
-                    style={{
-                        height: "100vh",
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        padding: 16,
-                        boxSizing: "border-box",
-                        background: "#f5f5f5",
-                    }}
-                >
-                    {/* scroll container */}
-                    <div
-                        style={{
-                            width: "100%",
-                            maxWidth: 400,
-                            maxHeight: "100%",
-                            overflowY: "auto",
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center", // nếu form nhỏ vẫn căn giữa
-                        }}
-                    >
-                        {isRegister ? (
-                            <RegisterForm
-                                form={formRegister}
-                                onRegister={onFinishRegister}
-                                onSwitch={() => setIsRegister(false)}
-                            />
-                        ) : (
-                            <LoginForm
-                                form={formLogin}
-                                onLogin={onFinishLogin}
-                                onSwitch={() => setIsRegister(true)}
-                            />
-                        )}
-                    </div>
-                </div>
-            </>
-        );
-    }
-
-
-    const containerWidth = "200%";
-    const translateX = isRegister ? "-50%" : "0";
 
     return (
-        <>
-            {contextHolder}
+        <div
+            className="
+                w-screen h-screen
+                flex items-center justify-center
+                bg-[url('https://www.pixground.com/wallpapers/bright-colorful-gradient-waves-4k-wallpaper/?download-img=4k')]
+                bg-cover bg-center bg-no-repeat
+            "
+        >
             <div
-                style={{
-                    width: containerWidth,
-                    height: "100vh",
-                    display: "flex",
-                    transition: "transform 0.6s ease",
-                    transform: `translateX(${translateX})`,
-                }}
+                className="
+                    w-[380px]
+                    rounded-2xl
+                    bg-white/10
+                    backdrop-blur-xl
+                    border border-white/20
+                    shadow-2xl
+                    p-8
+                    text-white
+                "
             >
-                {/* Login Panel */}
-                <div style={{width: "50%", height: "100vh"}}>
-                    <Row style={{height: "100vh"}}>
-                        <Col span={12} style={{padding: 0}}>
-                            <LoginCarousel/>
-                        </Col>
-                        <Col span={12} style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            maxHeight: "100vh",
-                            overflowY: "auto"
-                        }}>
-                            <LoginForm
-                                form={formLogin}
-                                onLogin={onFinishLogin}
-                                onSwitch={() => setIsRegister(true)}
-                            />
-                        </Col>
-                    </Row>
-                </div>
+                <h1 className="text-3xl font-semibold text-center mb-6">
+                    HỆ THỐNG QUẢN LÝ BÁN HÀNG
+                </h1>
 
-                {/* Register Panel */}
-                <div style={{width: "50%", height: "100vh"}}>
-                    <Row style={{height: "100vh"}}>
-                        <Col span={12} style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            maxHeight: "100vh",
-                            overflowY: "auto"
-                        }}>
-                            <RegisterForm
-                                form={formRegister}
-                                onRegister={onFinishRegister}
-                                onSwitch={() => setIsRegister(false)}
-                            />
-                        </Col>
-                        <Col span={12} style={{padding: 0}}>
-                            <LoginCarousel/>
-                        </Col>
-                    </Row>
-                </div>
+                <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={onLogin}
+                >
+                    <Form.Item
+                        name="username"
+                        rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập" }]}
+                    >
+                        <Input
+                            prefix={<UserOutlined />}
+                            placeholder="Username"
+                            size="large"
+                        />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="password"
+                        rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
+                    >
+                        <Input.Password
+                            prefix={<LockOutlined />}
+                            placeholder="Password"
+                            size="large"
+                        />
+                    </Form.Item>
+
+                    <Form.Item>
+                        <Button
+                            htmlType="submit"
+                            size="large"
+                            loading={loading}
+                            className="
+                                uppercase
+                                w-full
+                                rounded-full
+                                bg-white text-purple-700
+                                font-semibold
+                            "
+                        >
+                            ĐĂNG NHẬP
+                        </Button>
+                    </Form.Item>
+                </Form>
             </div>
-        </>
+        </div>
     );
 }

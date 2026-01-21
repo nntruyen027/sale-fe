@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from "@/store/auth";
 
 const api = axios.create({
     baseURL: "https://saleapi.tmqcreator.top",
@@ -8,13 +9,13 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-    if (typeof window !== "undefined") {
-        const token = localStorage.getItem("jwtToken");
-        if (token) {
-            config.headers = config.headers || {};
-            config.headers.Authorization = `Bearer ${token}`;
-        }
+    const token = useAuthStore.getState().token; // ✅ ĐÚNG
+
+    if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
 });
 

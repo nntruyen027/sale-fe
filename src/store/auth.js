@@ -1,10 +1,23 @@
-import {create} from "zustand";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-export const useAuthStore = create((set) => ({
-    token: null,
-    user: null,
+export const useAuthStore = create(
+    persist(
+        (set, get) => ({
+            user: null,
+            token: null,
 
-    setAuth: (token, user) => set({token, user}),
+            setAuth: ({ user, token }) => set({ user, token }),
 
-    logout: () => set({token: null, user: null})
-}));
+            setUser: (user) =>
+                set((state) => ({ ...state, user })),
+
+            clearAuth: () => set({ user: null, token: null }),
+
+            isLoggedIn: () => !!get().token,
+        }),
+        {
+            name: "auth-storage", // key trong localStorage
+        }
+    )
+);
