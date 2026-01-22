@@ -6,6 +6,7 @@ import {DeleteOutlined, EditOutlined, EllipsisOutlined} from "@ant-design/icons"
 import {importTinh, layDsTinh, layFileImport, suaTinh, themTinh, xoaTinh} from "@/services/quan-tri-vien/tinh";
 import {useDebounce} from "@/hook/data";
 import {usePermission} from "@/hook/usePermission";
+import {usePageInfoStore} from "@/store/page-info";
 
 
 export default function Page() {
@@ -14,6 +15,7 @@ export default function Page() {
     // STATE
     // -----------------------------
     const {message} = App.useApp()
+    const {setPageInfo} = usePageInfoStore()
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -64,6 +66,11 @@ export default function Page() {
     }, [debouncedSearch]);
 
     useEffect(() => {
+        setPageInfo(
+            {
+                title: 'Tỉnh / Thành phố'
+            }
+        )
         fetchData();
     }, []);
 

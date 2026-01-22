@@ -1,34 +1,28 @@
 "use client";
 
-import {
-    Avatar,
-    Button,
-    Dropdown,
-    Layout,
-    Menu,
-    theme,
-    Typography,
-} from "antd";
+import {Avatar, Button, Dropdown, Layout, Menu, theme, Typography,} from "antd";
 
 import {
     BarChartOutlined,
     LogoutOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
+    ProductOutlined,
     SafetyOutlined,
     SettingOutlined,
     TableOutlined,
     UsergroupAddOutlined,
-    UserOutlined,
+    UserOutlined
 } from "@ant-design/icons";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { useModal } from "@/store/modal";
-import { useAuthStore } from "@/store/auth";
-import { usePermission } from "@/hook/usePermission";
+import {useEffect, useMemo, useState} from "react";
+import {usePathname, useRouter} from "next/navigation";
+import {useModal} from "@/store/modal";
+import {useAuthStore} from "@/store/auth";
+import {usePermission} from "@/hook/usePermission";
+import {usePageInfoStore} from "@/store/page-info";
 
-const { Sider, Header, Content } = Layout;
+const {Sider, Header, Content} = Layout;
 
 /* ================= MENU CONFIG ================= */
 
@@ -36,52 +30,69 @@ const menuConfig = [
     {
         key: "/quan-tri-vien/dashboard",
         label: "Dashboard",
-        icon: <BarChartOutlined />,
+        icon: <BarChartOutlined/>,
         permissions: [], // PUBLIC
     },
     {
         key: "quan-ly",
         label: "Người dùng",
-        icon: <UsergroupAddOutlined />,
+        icon: <UsergroupAddOutlined/>,
         children: [
             {
                 key: "/quan-tri-vien/nguoi-dung",
                 label: "Tài khoản",
-                permissions: ['user:read', 'user:create', 'user:update', 'user:delete'],
+                permissions: ['user:read'],
             },
             {
                 key: "/quan-tri-vien/vai-tro",
                 label: "Vai trò",
-                permissions: ['role:read', 'role:create', 'role:update', 'role:delete'],
+                permissions: ['role:read'],
             },
         ],
     },
     {
+        key: 'quan-ly-san-pham',
+        label: 'Sản phẩm',
+        icon: <ProductOutlined/>,
+        children: [
+            {
+                key: "/quan-tri-vien/loai-san-pham",
+                label: 'Loại sản phẩm',
+                permissions: ['ptype:read'],
+            },
+            {
+                key: "/quan-tri-vien/san-pham",
+                label: 'Sản phẩm',
+                permissions: ['product:read'],
+            }
+        ]
+    },
+    {
         key: "danh-muc",
         label: "Danh mục",
-        icon: <TableOutlined />,
+        icon: <TableOutlined/>,
         children: [
             {
                 key: "/quan-tri-vien/tinh",
                 label: "Tỉnh / Thành phố",
-                permissions: ["tinh:read", "tinh:update", "tinh:delete", 'tinh:create'],
+                permissions: ["tinh:read"],
             },
             {
                 key: "/quan-tri-vien/xa",
                 label: "Xã / Phường",
-                permissions: ["xa:read", "xa:update", "xa:delete", 'xa:create'],
+                permissions: ["xa:read"],
             },
         ],
     },
     {
         key: "he-thong",
         label: "Hệ thống",
-        icon: <SettingOutlined />,
+        icon: <SettingOutlined/>,
         children: [
             {
                 key: "/quan-tri-vien/tham-so",
                 label: "Tham số",
-                permissions: ["param:read", "param:update", "param:delete", 'param:create'],
+                permissions: ["param:read"],
             },
         ],
     },
@@ -121,20 +132,21 @@ const normalizeMenu = (menus) =>
 
 /* ================= COMPONENT ================= */
 
-export default function RootLayout({ children }) {
+export default function RootLayout({children}) {
     const [collapsed, setCollapsed] = useState(false);
     const [checked, setChecked] = useState(false);
+    const title = usePageInfoStore((state) => state.title)
 
     const router = useRouter();
     const pathname = usePathname();
 
     const {
-        token: { colorBgContainer, borderRadiusLG },
+        token: {colorBgContainer, borderRadiusLG},
     } = theme.useToken();
 
-    const { SetIsUpdatePassOpen, setIsEditOpen } = useModal();
-    const { user, clearAuth } = useAuthStore();
-    const { hasAnyPermission } = usePermission();
+    const {SetIsUpdatePassOpen, setIsEditOpen} = useModal();
+    const {user, clearAuth} = useAuthStore();
+    const {hasAnyPermission} = usePermission();
 
     /* ================= MENU SAU KHI CHUẨN HOÁ ================= */
 
@@ -206,19 +218,19 @@ export default function RootLayout({ children }) {
         {
             key: "profile",
             label: "Thông tin tài khoản",
-            icon: <UserOutlined />,
+            icon: <UserOutlined/>,
             onClick: setIsEditOpen,
         },
         {
             key: "password",
             label: "Đổi mật khẩu",
-            icon: <SafetyOutlined />,
+            icon: <SafetyOutlined/>,
             onClick: SetIsUpdatePassOpen,
         },
         {
             key: "logout",
             label: "Đăng xuất",
-            icon: <LogoutOutlined />,
+            icon: <LogoutOutlined/>,
             onClick: handleLogout,
         },
     ];
@@ -247,7 +259,7 @@ export default function RootLayout({ children }) {
                 <Menu
                     mode="inline"
                     items={menuItems}
-                    onClick={({ key }) =>
+                    onClick={({key}) =>
                         key.startsWith("/") && router.push(key)
                     }
                 />
@@ -256,28 +268,26 @@ export default function RootLayout({ children }) {
             <Layout>
                 <Header
                     className="flex justify-between items-center"
-                    style={{ background: colorBgContainer, paddingLeft: 10 }}
+                    style={{background: colorBgContainer, paddingLeft: 10}}
                 >
-                    <Button
-                        type="text"
-                        icon={
-                            collapsed ? (
-                                <MenuUnfoldOutlined />
-                            ) : (
-                                <MenuFoldOutlined />
-                            )
-                        }
-                        onClick={() => setCollapsed(!collapsed)}
-                    />
+                    <div className="flex items-center justify-between">
+                        <Button
+                            type="text"
+                            icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
+                            onClick={() => setCollapsed(!collapsed)}
+                        />
+                        <h2 style={{margin: 0, fontSize: '20px'}}>{title}</h2>
+                    </div>
+
 
                     <Dropdown
-                        menu={{ items: userMenuItems }}
+                        menu={{items: userMenuItems}}
                         placement="bottomRight"
                     >
                         <div className="flex items-center gap-2 cursor-pointer">
                             <Avatar
                                 src={user?.avatar}
-                                icon={<UserOutlined />}
+                                icon={<UserOutlined/>}
                             />
                             <Typography.Text className="font-medium">
                                 {user?.hoTen || "Người dùng"}

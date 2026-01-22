@@ -7,6 +7,7 @@ import {getTinh} from "@/services/auth";
 import {useDebounce} from "@/hook/data";
 import {DeleteOutlined, EditOutlined, EllipsisOutlined} from "@ant-design/icons";
 import {usePermission} from "@/hook/usePermission";
+import {usePageInfoStore} from "@/store/page-info";
 
 export default function Page() {
 
@@ -14,6 +15,7 @@ export default function Page() {
      * 1. STATE
      * -------------------------------------------- */
     const {message} = App.useApp();
+    const {setPageInfo} = usePageInfoStore();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({current: 1, pageSize: 10, total: 0});
@@ -222,6 +224,7 @@ export default function Page() {
      * -------------------------------------------- */
     useEffect(() => {
         fetchData();
+        setPageInfo({title: 'Xã / Phường'})
     }, []);
 
     useEffect(() => {

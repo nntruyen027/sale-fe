@@ -7,6 +7,7 @@ import {layDsVaiTro, phanQuyen, suaVaiTro, themVaiTro, xoaVaiTro} from "@/servic
 import {useDebounce} from "@/hook/data";
 import PhanQuyenModal from "@/app/quan-tri-vien/vai-tro/PhanQuyenModal";
 import {usePermission} from "@/hook/usePermission";
+import {usePageInfoStore} from "@/store/page-info";
 
 
 export default function Page() {
@@ -15,6 +16,7 @@ export default function Page() {
     // STATE
     // -----------------------------
     const {message} = App.useApp()
+    const {setPageInfo} = usePageInfoStore();
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -63,6 +65,9 @@ export default function Page() {
     }, [debouncedSearch]);
 
     useEffect(() => {
+        setPageInfo(
+            {title: 'Vai trò'}
+        )
         fetchData();
     }, []);
 

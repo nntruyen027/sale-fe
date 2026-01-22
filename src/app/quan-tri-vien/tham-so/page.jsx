@@ -1,12 +1,13 @@
 'use client';
 
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import {App, Button, DatePicker, Dropdown, Form, Input, Modal, Select, Switch, Table, Tag} from "antd";
 import {DeleteOutlined, EditOutlined, EllipsisOutlined} from "@ant-design/icons";
 import {layDsThamSo, suaThamSo, themThamSo, xoaThamSo} from "@/services/quan-tri-vien/tham-so";
 import {useDebounce} from "@/hook/data";
 import {usePermission} from "@/hook/usePermission";
 import dayjs from "dayjs";
+import {usePageInfoStore} from "@/store/page-info";
 
 const DATA_TYPES = [
     "STRING",
@@ -24,6 +25,7 @@ export default function Page() {
     // STATE
     // -----------------------------
     const {message} = App.useApp();
+    const {setPageInfo} = usePageInfoStore();
     const {hasPermission} = usePermission();
 
     const [data, setData] = useState([]);
@@ -43,7 +45,6 @@ export default function Page() {
     const [searchText, setSearchText] = useState("");
     const debouncedSearch = useDebounce(searchText, 400);
 
-    const fileInputRef = useRef(null);
     const [form] = Form.useForm();
 
     // -----------------------------
@@ -71,6 +72,11 @@ export default function Page() {
     }, [debouncedSearch]);
 
     useEffect(() => {
+        setPageInfo(
+            {
+                title: 'Tham số'
+            }
+        )
         fetchData();
     }, []);
 
@@ -80,7 +86,7 @@ export default function Page() {
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
-            
+
 
             // parse JSON
             if (values.kieuDuLieu === "OBJECT" || values.kieuDuLieu === "ARRAY") {
@@ -294,6 +300,8 @@ export default function Page() {
                     setEditingThamSo(null);
                     form.resetFields();
                 }}
+                okText={editingThamSo ? 'Cập nhật' : 'Thêm'}
+                cancelText={'Thoát'}
             >
                 <Form
                     form={form}
@@ -359,6 +367,8 @@ export default function Page() {
                 onOk={confirmDelete}
                 onCancel={() => setDeleteModalVisible(false)}
                 okButtonProps={{danger: true}}
+                okText={'Xóa'}
+                cancelText={'Thoát'}
             >
                 Bạn có chắc muốn xóa tham số này không?
             </Modal>

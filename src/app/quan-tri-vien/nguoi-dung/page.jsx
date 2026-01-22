@@ -13,6 +13,7 @@ import {
 import {useDebounce} from "@/hook/data";
 import PhanQuyenModal from "./PhanQuyenModal";
 import {usePermission} from "@/hook/usePermission";
+import {usePageInfoStore} from "@/store/page-info";
 
 
 export default function Page() {
@@ -21,6 +22,7 @@ export default function Page() {
     // STATE
     // -----------------------------
     const {message} = App.useApp()
+    const {setPageInfo} = usePageInfoStore()
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -70,6 +72,9 @@ export default function Page() {
     }, [debouncedSearch]);
 
     useEffect(() => {
+        setPageInfo({
+            title: 'Tài khoản',
+        })
         fetchData();
     }, []);
 
@@ -218,7 +223,7 @@ export default function Page() {
                     })
                 }
 
-                
+
                 return (
                     <Dropdown menu={{items}} trigger={['click']}>
                         <Button type="text" icon={<EllipsisOutlined/>}/>

@@ -3,7 +3,7 @@
 import {Button, Image, message, Popconfirm, Space, Typography, Upload} from "antd";
 import {DeleteOutlined, EyeOutlined, FileOutlined, UploadOutlined} from "@ant-design/icons";
 import {useState} from "react";
-import {getPublicFileUrl, uploadFile} from "@/services/file";
+import {uploadFile} from "@/services/file";
 
 const {Link, Text} = Typography;
 
@@ -22,7 +22,7 @@ export default function FileUploadUrl({
         try {
             setLoading(true);
             const res = await uploadFile(file);
-            const url = getPublicFileUrl(res.url);
+            const url = (res.url);
             onChange?.(url);
             message.success("Tải file thành công");
         } catch {
