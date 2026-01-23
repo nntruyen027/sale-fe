@@ -10,6 +10,7 @@ import {
     ProductOutlined,
     SafetyOutlined,
     SettingOutlined,
+    SignatureOutlined,
     TableOutlined,
     UsergroupAddOutlined,
     UserOutlined
@@ -64,6 +65,29 @@ const menuConfig = [
                 key: "/quan-tri-vien/san-pham",
                 label: 'Sản phẩm',
                 permissions: ['product:read'],
+            }
+        ]
+    }
+    ,
+    {
+        key: 'quan-ly-bai-viet',
+        label: 'Bài viết',
+        icon: <SignatureOutlined/>,
+        children: [
+            {
+                key: "/quan-tri-vien/chuyen-muc",
+                label: 'Chuyên mục',
+                permissions: ['btype:read'],
+            },
+            {
+                key: "/quan-tri-vien/bai-viet",
+                label: 'Bài viết',
+                permissions: ['blog:read'],
+            },
+            {
+                key: "/quan-tri-vien/catalog",
+                label: 'Catalog',
+                permissions: ['catalog:read'],
             }
         ]
     },

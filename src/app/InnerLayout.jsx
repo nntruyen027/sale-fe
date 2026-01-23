@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/auth";
-import { getMe } from "@/services/auth";
+import {useEffect, useState} from "react";
+import {usePathname, useRouter} from "next/navigation";
+import {useAuthStore} from "@/store/auth";
+import {getMe} from "@/services/auth";
 
-export default function InnerLayout({ children }) {
+
+export default function InnerLayout({children}) {
     const router = useRouter();
     const pathname = usePathname();
 
-    const { user, setAuth, clearAuth } = useAuthStore();
+    const {user, setAuth, clearAuth} = useAuthStore();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
