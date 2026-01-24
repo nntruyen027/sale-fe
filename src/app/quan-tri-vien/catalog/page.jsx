@@ -8,6 +8,8 @@ import {useDebounce} from "@/hook/data";
 import {usePermission} from "@/hook/usePermission";
 import {usePageInfoStore} from "@/store/page-info";
 import FileUploadUrl from "@/app/components/common/FileUploadUrl";
+import dayjs from "dayjs";
+
 
 export default function Page() {
     const setPageInfo = usePageInfoStore(state => state.setPageInfo)
@@ -159,12 +161,13 @@ export default function Page() {
         {
             title: "Ảnh bìa",
             dataIndex: "anhBia",
-            width: 90,
+            width: 100,
             render: (anhBia, record) => anhBia ? <Image src={anhBia} alt={record.tieuDe} width={60}/> : null
         },
         {
             title: "Ngày tạo",
             dataIndex: "ngayTao",
+            render: (ngayTao) => dayjs(ngayTao).format('DD-MM-YYYY hh:mm:ss'),
         },
         {
             title: "Thao tác",

@@ -179,6 +179,8 @@ export default function Page() {
             else
                 fetchData(pagination.current, pagination.pageSize, debouncedSearch);
 
+        } catch (e) {
+            message.error(e.message);
         } finally {
             setDeleteModalVisible(false);
             setDeletingId(null);
