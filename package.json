@@ -23,7 +23,9 @@
     "quill": "^2.0.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-pdf": "^10.3.0",
     "react-pdf-flipbook": "^0.1.6",
+    "react-pdf-flipbook-viewer": "^0.2.0",
     "recharts": "^3.3.0",
     "sockjs-client": "^1.6.1",
     "zustand": "^5.0.9"

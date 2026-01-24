@@ -1,15 +1,13 @@
 'use client';
 
 import {useEffect, useState} from "react";
-import {App, Button, Dropdown, Form, Input, Modal, Table} from "antd";
+import {App, Button, Dropdown, Form, Image, Input, Modal, Table} from "antd";
 import {DeleteOutlined, EditOutlined, EllipsisOutlined, EyeOutlined} from "@ant-design/icons";
 import {layDsCatalog, suaCatalog, themCatalog, xoaCatalog} from "@/services/quan-tri-vien/catalog";
 import {useDebounce} from "@/hook/data";
 import {usePermission} from "@/hook/usePermission";
 import {usePageInfoStore} from "@/store/page-info";
 import FileUploadUrl from "@/app/components/common/FileUploadUrl";
-import PdfPreview from "@/app/components/common/PdfPreview";
-import PdfFlipBook from "@/app/components/common/PdfFlipBook";
 
 export default function Page() {
     const setPageInfo = usePageInfoStore(state => state.setPageInfo)
@@ -28,7 +26,9 @@ export default function Page() {
         total: 0
     });
     const [previewOpen, setPreviewOpen] = useState(false);
-    const [previewUrl, setPreviewUrl] = useState('');
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [previewSize, setPreviewSize] = useState(null);
+
 
     const [modalVisible, setModalVisible] = useState(false);
     const [editingCatalog, setEditingCatalog] = useState(null);
@@ -110,7 +110,8 @@ export default function Page() {
 
 
         form.setFieldsValue({
-            tieuDe: record.ten,
+            tieuDe: record.tieuDe,
+            anhBia: record.anhBia,
             url: record.url,
         });
 
@@ -156,10 +157,10 @@ export default function Page() {
         },
         {title: "Tiêu đề", dataIndex: "tieuDe"},
         {
-            title: "Preview",
-            dataIndex: "url",
+            title: "Ảnh bìa",
+            dataIndex: "anhBia",
             width: 90,
-            render: (url) => <PdfPreview url={url}/>
+            render: (anhBia, record) => anhBia ? <Image src={anhBia} alt={record.tieuDe} width={60}/> : null
         },
         {
             title: "Ngày tạo",
@@ -268,11 +269,18 @@ export default function Page() {
                     </Form.Item>
 
                     <Form.Item
+                        label="Ảnh bìa"
+                        name="anhBia"
+                    >
+                        <FileUploadUrl accept={'image/*'}/>
+                    </Form.Item>
+
+                    <Form.Item
                         label="Tệp tin"
                         name="url"
                         rules={[{required: true, message: "Vui lòng nhập file"}]}
                     >
-                        <FileUploadUrl/>
+                        <Input/>
                     </Form.Item>
 
 
@@ -293,24 +301,15 @@ export default function Page() {
             </Modal>
             <Modal
                 open={previewOpen}
-                onCancel={() => {
-                    setPreviewOpen(false)
-                    setPreviewUrl(null)
-                }}
                 footer={null}
                 centered
-                width="90vw"
-                styles={{
-                    body: {
-                        height: "90vh",
-                        padding: 0,
-                        overflow: "hidden",
-                    },
-                }}
+                onCancel={() => setPreviewOpen(false)}
+                width="100vw"
+                styles={{body: {height: "95vh", padding: 0}}}
             >
-                <PdfFlipBook
-                    pdfUrl={previewUrl}
-                    paperType={'A4'}
+                <iframe
+                    src={previewUrl}
+                    style={{width: "100%", height: "100%", border: "none"}}
                 />
             </Modal>
 
