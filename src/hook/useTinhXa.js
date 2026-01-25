@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useRef, useState} from "react";
-import {getTinh, getXa} from "@/services/auth";
+import {getTinh, getXa} from "@/services/public";
 import {useDebounce} from "@/hook/data";
 
 export function useTinhXaSelect() {

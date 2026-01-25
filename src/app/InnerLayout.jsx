@@ -16,7 +16,7 @@ export default function InnerLayout({children}) {
     useEffect(() => {
         const initAuth = async () => {
             // 🔥 không check auth ở trang login
-            if (pathname === "/login") {
+            if (!pathname.startsWith("/")) {
                 setLoading(false);
                 return;
             }
@@ -27,12 +27,14 @@ export default function InnerLayout({children}) {
             // ❌ chưa login
             if (!token || !userLocal) {
                 clearAuth();
-                router.replace("/login");
+                if (pathname.startsWith("/quan-tri-vien"))
+                    router.replace("/quan-tri-vien/login");
+                else
+                    router.replace("/");
                 setLoading(false);
                 return;
             }
 
-            // ✅ đã có localStorage nhưng store chưa có (F5)
             if (!user) {
                 try {
                     // optional: gọi lại /me để đảm bảo user mới nhất
@@ -44,7 +46,10 @@ export default function InnerLayout({children}) {
                     });
                 } catch (e) {
                     clearAuth();
-                    router.replace("/login");
+                    if (pathname.startsWith("/quan-tri-vien"))
+                        router.replace("/quan-tri-vien/login");
+                    else
+                        router.replace("/");
                 }
             }
 

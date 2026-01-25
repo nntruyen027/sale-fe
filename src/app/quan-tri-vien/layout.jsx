@@ -118,6 +118,11 @@ const menuConfig = [
                 label: "Tham số",
                 permissions: ["param:read"],
             },
+            {
+                key: "/quan-tri-vien/banner",
+                label: "Banner",
+                permissions: [],
+            }
         ],
     },
 ];
@@ -222,14 +227,16 @@ export default function RootLayout({children}) {
         // Không đủ quyền → chặn
         if (!hasAnyPermission(matched.permissions)) {
             clearAuth();
-            router.replace("/login"); // hoặc /403
+            router.replace("/quan-tri-vien/login"); // hoặc /403
             return;
         }
 
         setChecked(true);
     }, [user, pathname]);
+    if (pathname == '/quan-tri-vien/login')
+        return children;
 
-    if (!checked) return null;
+    if (!checked) return;
 
     /* ================= HANDLERS ================= */
 

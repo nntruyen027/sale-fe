@@ -7,7 +7,9 @@ export default function ClientLayout({children}) {
     return (
         <ConfigProvider
             theme={{
-
+                token: {
+                    mainColor: '#4d6648',
+                },
                 components: {
                     Menu: {
                         itemHeight: 36,

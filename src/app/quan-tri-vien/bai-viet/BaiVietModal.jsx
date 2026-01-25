@@ -6,6 +6,7 @@ import {suaBaiViet, themBaiViet} from "@/services/quan-tri-vien/bai-viet";
 import Editor from "@/app/components/common/Editor";
 import {layDsChuyenMuc} from "@/services/quan-tri-vien/chuyen-muc";
 import {useChuyenMucSelect} from "@/hook/useChuyenMuc";
+import FileUploadUrl from "@/app/components/common/FileUploadUrl";
 
 export default function BaiVietModal({open, data, onClose, onSuccess}) {
     const {message} = App.useApp();
@@ -136,11 +137,19 @@ export default function BaiVietModal({open, data, onClose, onSuccess}) {
                         </Form.Item>
                     </Col>
                 </Row>
+                <Row gutter={16}>
+                    <Col span={16}>
+                        <Form.Item name="tomTat" label="Tóm tắt">
+                            <Input.TextArea rows={3}/>
+                        </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                        <Form.Item name="hinhAnh" label="Tóm tắt">
+                            <FileUploadUrl/>
+                        </Form.Item>
+                    </Col>
 
-
-                <Form.Item name="tomTat" label="Tóm tắt">
-                    <Input.TextArea rows={3}/>
-                </Form.Item>
+                </Row>
 
 
                 <Form.Item name="noiDung" label="Nội dung" rules={[{required: true}]}>

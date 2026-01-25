@@ -1,15 +1,15 @@
 'use client';
 
 import {useEffect, useRef, useState} from "react";
-import {layDsLoaiSanPham} from "@/services/public";
+import {layDsBaiViet} from "@/services/public";
 import {useDebounce} from "@/hook/data";
 
-export function useLoaiSpSelect({defaultLimit = 20} = {}) {
+export function useBaiVietSelect({defaultLimit = 20} = {}) {
 
     /* ===================== STATE ===================== */
-    const [dsLoaiSp, setDsLoaiSp] = useState([]);
-    const [searchLoaiSp, setSearchLoaiSp] = useState("");
-    const debouncedLoaiSp = useDebounce(searchLoaiSp, 300);
+    const [dsBaiViet, setDsBaiViet] = useState([]);
+    const [searchBaiViet, setSearchBaiViet] = useState("");
+    const debouncedBaiViet = useDebounce(searchBaiViet, 300);
 
     const [pagi, setPagi] = useState({
         page: 1,
@@ -20,18 +20,18 @@ export function useLoaiSpSelect({defaultLimit = 20} = {}) {
     const [loading, setLoading] = useState(false);
     const cacheRef = useRef({});
 
-    const hasMore = dsLoaiSp.length < pagi.total;
+    const hasMore = dsBaiViet.length < pagi.total;
 
     /* ===================== FETCH ===================== */
-    const fetchLoaiSp = async ({reset = false} = {}) => {
+    const fetchBaiViet = async ({reset = false} = {}) => {
         if (loading) return;
 
         const page = reset ? 1 : pagi.page;
-        const cacheKey = `${debouncedLoaiSp}_${page}_${pagi.limit}`;
+        const cacheKey = `${debouncedBaiViet}_${page}_${pagi.limit}`;
 
         // lấy từ cache
         if (cacheRef.current[cacheKey]) {
-            setDsLoaiSp(prev =>
+            setDsBaiViet(prev =>
                 reset
                     ? cacheRef.current[cacheKey]
                     : [...prev, ...cacheRef.current[cacheKey]]
@@ -41,17 +41,17 @@ export function useLoaiSpSelect({defaultLimit = 20} = {}) {
 
         setLoading(true);
         try {
-            const res = await layDsLoaiSanPham({
+            const res = await layDsBaiViet({
                 page,
                 limit: pagi.limit,
-                search: debouncedLoaiSp,
+                search: debouncedBaiViet,
             });
 
             const list = res?.data || [];
 
             cacheRef.current[cacheKey] = list;
 
-            setDsLoaiSp(prev => reset ? list : [...prev, ...list]);
+            setDsBaiViet(prev => reset ? list : [...prev, ...list]);
             setPagi(p => ({
                 ...p,
                 page,
@@ -66,33 +66,33 @@ export function useLoaiSpSelect({defaultLimit = 20} = {}) {
 
     // 🔥 FETCH LẦN ĐẦU KHI MOUNT (QUAN TRỌNG)
     useEffect(() => {
-        fetchLoaiSp({reset: true});
+        fetchBaiViet({reset: true});
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // 🔍 SEARCH
     useEffect(() => {
         cacheRef.current = {};
-        setDsLoaiSp([]);
+        setDsBaiViet([]);
         setPagi(p => ({...p, page: 1}));
-        fetchLoaiSp({reset: true});
+        fetchBaiViet({reset: true});
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedLoaiSp]);
+    }, [debouncedBaiViet]);
 
     // ➕ LOAD MORE
     useEffect(() => {
         if (pagi.page > 1) {
-            fetchLoaiSp();
+            fetchBaiViet();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pagi.page]);
 
     /* ===================== API ===================== */
     return {
-        dsLoaiSp,
+        dsBaiViet,
         loading,
         hasMore,
-        setSearchLoaiSp,
+        setSearchBaiViet,
         loadMore: () => {
             if (hasMore && !loading) {
                 setPagi(p => ({...p, page: p.page + 1}));

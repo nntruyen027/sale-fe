@@ -3,7 +3,7 @@
 import {useEffect, useRef, useState} from "react";
 import {App, Button, Dropdown, Form, Input, Modal, Select, Table} from "antd";
 import {importXa, layDsXa, layFileImport, suaXa, themXa, xoaXa} from "@/services/quan-tri-vien/xa";
-import {getTinh} from "@/services/auth";
+import {getTinh} from "@/services/public";
 import {useDebounce} from "@/hook/data";
 import {DeleteOutlined, EditOutlined, EllipsisOutlined} from "@ant-design/icons";
 import {usePermission} from "@/hook/usePermission";
@@ -328,7 +328,7 @@ export default function Page() {
                             filterOption={false}
                             onPopupScroll={handleTinhScroll}
                         >
-                            {dsTinh.map(t => (
+                            {dsTinh?.map(t => (
                                 <Select.Option key={t.id} value={t.id}>
                                     {t.ten}
                                 </Select.Option>
