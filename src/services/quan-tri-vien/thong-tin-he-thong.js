@@ -42,7 +42,7 @@ export async function xoaBanner(id) {
 
 export async function caiDatHomeAboutMe(body) {
     try {
-        const res = await api.post(`${BASE_PATH}/home-gioithieu`, body);
+        const res = await api.post(`${BASE_PATH}/home_gioithieu`, body);
         return res.data;
     } catch (e) {
         throw new Error(e?.response?.data?.message)
@@ -51,7 +51,7 @@ export async function caiDatHomeAboutMe(body) {
 
 export async function layHomeAboutMe(body) {
     try {
-        const res = await api.get(`${BASE_PATH}/home-gioithieu`);
+        const res = await api.get(`${BASE_PATH}/home_gioithieu`);
         return res.data;
     } catch (e) {
         throw new Error(e?.response?.data?.message)

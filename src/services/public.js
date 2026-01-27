@@ -72,7 +72,7 @@ export async function layDsBanner() {
 
 export async function layHomeAboutMe(body) {
     try {
-        const res = await api.get(`${BASE_PATH}/home-gioithieu`);
+        const res = await api.get(`${BASE_PATH}/home_gioithieu`);
         return res.data;
     } catch (e) {
         throw new Error(e?.response?.data?.message)
