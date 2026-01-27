@@ -42,90 +42,92 @@ export default function TinTuc() {
                 <div className="flex justify-center mt-8">
                     <div
                         onClick={loadMore}
-                        className="
-                            relative
-                            px-6 py-2
-                            cursor-pointer
-                            font-medium
-                            overflow-hidden
-                            group
-                            border rounded-md
-                            select-none
-                        "
+                        className={"relative px-6 py-2 cursor-pointer font-medium overflow-hidden group border rounded-md select-none transition-colors duration-300"}
                         style={{
-                            color: 'white',
+                            color: 'white',                // chữ ban đầu
                             borderColor: 'white',
                         }}
                     >
-                        {/* background chạy */}
+
                         <span
-                            className="
-                                absolute inset-0
-                                -translate-x-full
-                                group-hover:translate-x-0
-                                transition-transform duration-500 ease-out
-                            "
-                            style={{backgroundColor: 'white'}}
-                        />
-
-                        {/* text */}
-                        <span
-                            className={
-                                ` relative z-10
-                            group-hover:text-[${token.mainColor}]
-                            transition-colors duration-300`
-                            }
-
-
+                            className={"relative z-10 inline-block transition-transform duration-300 group-hover:scale-130"}
                         >
                             Xem thêm
                         </span>
+
                     </div>
                 </div>
             )}
+
         </div>
     );
 }
 
 function TinTucComponent({tinTuc, index}) {
+    const {token} = theme.useToken();
 
 
     return (
-        <div className={''}>
-            <div
-                className={`
-                relative
-                h-[600px]
-                overflow-hidden
-                group
-                cursor-pointer
-            `}
-                style={{
-                    backgroundImage: `url(${tinTuc.hinhAnh})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                }}
-            >
-
-
+        <div className="group">
+            {/* IMAGE */}
+            <div className="relative h-[600px] overflow-hidden cursor-pointer shadow-md
+        hover:shadow-xl
+        transition-shadow duration-300">
+                {/* layer hình */}
+                <div
+                    className="
+                absolute inset-0
+                transition-transform duration-700 ease-out
+                group-hover:scale-120
+            "
+                    style={{
+                        backgroundImage: `url(${tinTuc.hinhAnh})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}
+                />
             </div>
-            <div className={'p-3 bg-white'}>
-                <Row>
-                    <Col span={8}>
-                        <Typography.Text>
+
+            {/* CONTENT */}
+            <div style={{
+                background: token.mainColor,
+            }}>
+                <Row gutter={[16, 16]}>
+                    <Col
+                        span={8}
+                        style={{
+                            padding: '7px',
+                            background: '#fff',
+                            color: 'white',
+                            clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)',
+                            textAlign: 'center',
+                        }}
+                    >
+                        <Typography.Text style={{color: 'black'}}>
                             {dayjs(tinTuc.ngayTao).format('DD/MM/YYYY HH:mm')}
                         </Typography.Text>
                     </Col>
-                    <Col span={16}>
-                        <Typography.Text>
+
+                    <Col span={16} style={{
+                        backgroundColor: token.mainColor,
+                        padding: '7px',
+                    }}>
+
+                        <Typography.Text style={{
+                            display: 'block',
+                            textAlign: 'right',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            color: 'white',
+
+                        }}>
                             {tinTuc.tieuDe}
                         </Typography.Text>
                     </Col>
                 </Row>
             </div>
-
-
         </div>
+
 
     );
 }

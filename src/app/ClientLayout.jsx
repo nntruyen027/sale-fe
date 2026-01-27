@@ -9,14 +9,20 @@ export default function ClientLayout({children}) {
             theme={{
                 token: {
                     mainColor: '#4d6648',
+                    colorPrimary: '#4d6648'
                 },
                 components: {
                     Menu: {
                         itemHeight: 36,
-                        fontSize: 14
+                        fontSize: 14,
+                        itemSelectedColor: '#4d6648',
+                        itemSelectedBg: 'rgba(77,102,72,0.12)',
+
+                        itemHoverColor: '#4d6648',             // hover chữ
+                        itemHoverBg: 'rgba(77,102,72,0.08)',   // hover nền
                     },
                     Table: {
-                        headerBg: "rgba(21, 101, 192, 0.1);",          // nền header
+                        headerBg: "rgba(77, 102, 72, 0.1);",          // nền header
                         headerColor: "black",       // chữ header
                         headerSplitColor: "#ffffff30",
                         borderColor: "#f0f0f0",

@@ -3,7 +3,7 @@
 import {useEffect, useState} from "react";
 import {App, Button, Col, Dropdown, Form, Image, Input, Modal, Row, Switch, Table} from "antd";
 import {CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined} from "@ant-design/icons";
-import {layDsBanner, suaBanner, themBanner, xoaBanner} from "@/services/quan-tri-vien/banner";
+import {layDsBanner, suaBanner, themBanner, xoaBanner} from "@/services/quan-tri-vien/thong-tin-he-thong";
 import {usePermission} from "@/hook/usePermission";
 import FileUploadUrl from "@/app/components/common/FileUploadUrl";
 import {usePageInfoStore} from "@/store/page-info";

@@ -122,6 +122,11 @@ const menuConfig = [
                 key: "/quan-tri-vien/banner",
                 label: "Banner",
                 permissions: [],
+            },
+            {
+                key: "/quan-tri-vien/cau-hinh-trang-chu",
+                label: "Giao diện Trang chủ",
+                permissions: [],
             }
         ],
     },
@@ -170,7 +175,7 @@ export default function RootLayout({children}) {
     const pathname = usePathname();
 
     const {
-        token: {colorBgContainer, borderRadiusLG},
+        token: {colorBgContainer, borderRadiusLG, colorPrimary},
     } = theme.useToken();
 
     const {SetIsUpdatePassOpen, setIsEditOpen} = useModal();
@@ -282,7 +287,8 @@ export default function RootLayout({children}) {
                 }}
             >
                 {!collapsed && (
-                    <div className="font-['Times_New_Roman'] text-lg text-center p-2 text-white bg-[#1677ff]">
+                    <div style={{background: colorPrimary}}
+                         className="font-['Times_New_Roman'] text-lg text-center p-2 text-white ">
                         THƯƠNG MẠI ĐIỆN TỬ
                     </div>
                 )}
@@ -307,7 +313,7 @@ export default function RootLayout({children}) {
                             icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
                             onClick={() => setCollapsed(!collapsed)}
                         />
-                        <h2 style={{margin: 0, fontSize: '20px'}}>{title}</h2>
+                        <h2 style={{margin: 0, fontSize: '20px', color: colorPrimary}}>{title}</h2>
                     </div>
 
 

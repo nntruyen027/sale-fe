@@ -110,11 +110,11 @@ export default function FileUploadUrl({
             )}
 
             {/* ===== filename ===== */}
-            {value && (
-                <Text type="secondary" style={{fontSize: 12}}>
-                    {value.split("/").pop()}
-                </Text>
-            )}
+            {/*{value && (*/}
+            {/*    <Text type="secondary" style={{fontSize: 12}}>*/}
+            {/*        {value.split("/").pop()}*/}
+            {/*    </Text>*/}
+            {/*)}*/}
         </Space>
     );
 }
