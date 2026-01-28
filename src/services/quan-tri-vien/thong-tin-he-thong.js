@@ -49,9 +49,18 @@ export async function caiDatHomeAboutMe(body) {
     }
 }
 
-export async function layHomeAboutMe(body) {
+export async function caiDatHomeChucNang(body) {
     try {
-        const res = await api.get(`${BASE_PATH}/home_gioithieu`);
+        const res = await api.post(`${BASE_PATH}/home_chucnang`, body);
+        return res.data;
+    } catch (e) {
+        throw new Error(e?.response?.data?.message)
+    }
+}
+
+export async function caiDatHomeSanPhamGoiY(body) {
+    try {
+        const res = await api.post(`${BASE_PATH}/home_sanphamgoiy`, body);
         return res.data;
     } catch (e) {
         throw new Error(e?.response?.data?.message)

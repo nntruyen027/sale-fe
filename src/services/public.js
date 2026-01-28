@@ -70,9 +70,45 @@ export async function layDsBanner() {
 
 }
 
-export async function layHomeAboutMe(body) {
+export async function layHomeAboutMe() {
     try {
         const res = await api.get(`${BASE_PATH}/home_gioithieu`);
+        return res.data;
+    } catch (e) {
+        throw new Error(e?.response?.data?.message)
+    }
+}
+
+export async function layHomeChucNang() {
+    try {
+        const res = await api.get(`${BASE_PATH}/home_chucnang`);
+        return res.data;
+    } catch (e) {
+        throw new Error(e?.response?.data?.message)
+    }
+}
+
+export async function layHomeSanPhamGoiY() {
+    try {
+        const res = await api.get(`${BASE_PATH}/home_sanphamgoiy`);
+        return res.data;
+    } catch (e) {
+        throw new Error(e?.response?.data?.message)
+    }
+}
+
+export async function layDsSanPham({loaiSp, search, page, size}) {
+    try {
+        const res = await api.get(`${BASE_PATH}/san-pham`);
+        return res.data;
+    } catch (e) {
+        throw new Error(e?.response?.data?.message)
+    }
+}
+
+export async function laySanPhamTheoId(id) {
+    try {
+        const res = await api.get(`${BASE_PATH}/san-pham/${id}`)
         return res.data;
     } catch (e) {
         throw new Error(e?.response?.data?.message)

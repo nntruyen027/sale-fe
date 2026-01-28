@@ -92,7 +92,7 @@ function TinTucComponent({tinTuc, index}) {
             <div style={{
                 background: token.mainColor,
             }}>
-                <Row gutter={[16, 16]}>
+                <Row style={{margin: 0}} gutter={[16, 16]}>
                     <Col
                         span={8}
                         style={{

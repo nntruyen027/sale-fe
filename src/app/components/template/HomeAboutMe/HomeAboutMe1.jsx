@@ -36,8 +36,6 @@ export default function HomeAboutMe1({readOnly = true}) {
     ======================= */
     const titleView = useInView();
     const leftView = useInView();
-    const featureView = useInView();
-    const imageView = useInView();
     const mainImageView = useInView({threshold: 0.25});
     const subImageView = useInView({threshold: 0.25});
 
@@ -60,11 +58,6 @@ export default function HomeAboutMe1({readOnly = true}) {
         setData(prev => ({...prev, [key]: value}));
     };
 
-    const updateFeature = (index, field, value) => {
-        const features = [...data.features];
-        features[index][field] = value;
-        setData({...data, features});
-    };
 
     const updateImage = (key, url) => {
         setData(prev => ({
@@ -86,7 +79,7 @@ export default function HomeAboutMe1({readOnly = true}) {
     };
 
     return (
-        <div className="px-6 md:px-40 pb-16 overflow-hidden">
+        <div className="px-6 md:px-40 p-16 overflow-hidden">
 
             {/* TITLE SMALL */}
             <div
@@ -97,7 +90,7 @@ export default function HomeAboutMe1({readOnly = true}) {
                 `}
             >
                 <Typography.Title
-                    style={{color: token.colorPrimary, textAlign: "center"}}
+                    style={{color: token.colorPrimary}}
                 >
                     {readOnly ? data.titleSmall : (
                         <Input
