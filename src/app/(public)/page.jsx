@@ -48,7 +48,10 @@ export default function HomaPage() {
 
     return (
         <div className={'p-0'}>
+
             <HomeBanner/>
+            <LoaiSanPham/>
+            
             {tempSpGoiYKey && (
                 <TemplateSpGoiY readOnly/>
             )}
@@ -58,7 +61,6 @@ export default function HomaPage() {
             {TemplateChucNang && (
                 <TemplateChucNang readOnly/>
             )}
-            <LoaiSanPham/>
 
             <TinTuc/>
         </div>

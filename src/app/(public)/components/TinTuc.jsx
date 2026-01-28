@@ -3,6 +3,7 @@
 import {Col, Row, Spin, theme, Typography} from "antd";
 import {useBaiVietSelect} from "@/hook/useBaiViet";
 import dayjs from "dayjs";
+import {useInView} from "@/hook/useInView";
 
 
 export default function TinTuc() {
@@ -16,10 +17,8 @@ export default function TinTuc() {
     } = useBaiVietSelect({defaultLimit: 3});
 
     return (
-        <div className={`px-0 py-10 sm:px-40`} style={{
-            backgroundColor: token.mainColor
-        }}>
-            <Typography.Title style={{color: 'white', textAlign: 'center'}}>
+        <div className={`px-0 py-10 sm:px-40 `}>
+            <Typography.Title style={{color: token.colorPrimary, textAlign: 'center',}}>
                 Tin tức
             </Typography.Title>
 
@@ -65,69 +64,105 @@ export default function TinTuc() {
 
 function TinTucComponent({tinTuc, index}) {
     const {token} = theme.useToken();
-
+    const {ref, inView} = useInView({threshold: 0.25});
 
     return (
-        <div className="group">
+        <div
+            ref={ref}
+            className={`
+                group
+                bg-white
+                rounded-xl
+                shadow-lg
+                overflow-hidden
+                transition-all
+                duration-700
+                ease-[cubic-bezier(0.22,1,0.36,1)]
+                ${
+                inView
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-8"
+            }
+                hover:-translate-y-2
+                hover:shadow-2xl
+            `}
+            style={{
+                transitionDelay: `${index * 120}ms`,
+            }}
+        >
             {/* IMAGE */}
-            <div className="relative h-[600px] overflow-hidden cursor-pointer shadow-md
-        hover:shadow-xl
-        transition-shadow duration-300">
-                {/* layer hình */}
+            <div className="relative h-[420px] overflow-hidden">
                 <div
                     className="
-                absolute inset-0
-                transition-transform duration-700 ease-out
-                group-hover:scale-120
-            "
+                        absolute inset-0
+                        bg-center bg-cover
+                        transition-transform
+                        duration-700
+                        ease-out
+                        group-hover:scale-110
+                    "
                     style={{
                         backgroundImage: `url(${tinTuc.hinhAnh})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
                     }}
+                />
+
+                {/* Overlay gradient */}
+                <div
+                    className="
+                        absolute inset-0
+
+                        bg-gradient-to-t
+                        from-black/40
+                        via-black/10
+                        to-transparent
+                        opacity-60
+                        group-hover:opacity-80
+                        transition-opacity
+                        duration-500
+                    "
                 />
             </div>
 
             {/* CONTENT */}
-            <div style={{
-                background: token.mainColor,
-            }}>
-                <Row style={{margin: 0}} gutter={[16, 16]}>
+            <div
+                style={{background: token.mainColor}}
+                className="relative"
+            >
+                <Row gutter={0}>
+                    {/* DATE */}
                     <Col
-                        span={8}
+                        span={6}
+                        className="bg-white px-3 py-2"
                         style={{
-                            padding: '7px',
-                            background: '#fff',
-                            color: 'white',
-                            clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)',
-                            textAlign: 'center',
+                            clipPath:
+                                "polygon(0 0, 100% 0, 85% 100%, 0% 100%)",
                         }}
                     >
-                        <Typography.Text style={{color: 'black'}}>
-                            {dayjs(tinTuc.ngayTao).format('DD/MM/YYYY HH:mm')}
+                        <Typography.Text className="text-sm text-gray-600">
+                            {dayjs(tinTuc.ngayTao).format("DD/MM/YYYY")}
                         </Typography.Text>
                     </Col>
 
-                    <Col span={16} style={{
-                        backgroundColor: token.mainColor,
-                        padding: '7px',
-                    }}>
+                    {/* TITLE */}
+                    <Col span={18} className="px-3 py-2">
+                        <Typography.Text
+                            style={{
+                                color: 'white'
+                            }}
+                            className="
+                                block
+                                text-right
+                                text-base
+                                font-semibold
 
-                        <Typography.Text style={{
-                            display: 'block',
-                            textAlign: 'right',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            color: 'white',
-
-                        }}>
+                                line-clamp-2
+                            "
+                        >
                             {tinTuc.tieuDe}
                         </Typography.Text>
                     </Col>
                 </Row>
             </div>
         </div>
-
-
     );
 }

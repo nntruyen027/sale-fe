@@ -18,7 +18,7 @@ export default function LoaiSanPham() {
     return (
         <div className="px-0 py-10 sm:px-40">
             <Typography.Title style={{color: token.mainColor}}>
-                Sản phẩm
+                Nhóm sản phẩm
             </Typography.Title>
 
             <Spin spinning={loading && dsLoaiSp.length === 0}>
