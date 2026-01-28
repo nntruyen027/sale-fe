@@ -41,19 +41,42 @@ export default function TinTuc() {
                 <div className="flex justify-center mt-8">
                     <div
                         onClick={loadMore}
-                        className={"relative px-6 py-2 cursor-pointer font-medium overflow-hidden group border rounded-md select-none transition-colors duration-300"}
+                        className="
+                            relative
+                            px-6 py-2
+                            cursor-pointer
+                            font-medium
+                            overflow-hidden
+                            group
+                            border rounded-md
+                            select-none
+                        "
                         style={{
-                            color: 'white',                // chữ ban đầu
-                            borderColor: 'white',
+                            color: token.mainColor,
+                            borderColor: token.mainColor,
                         }}
                     >
-
+                        {/* background chạy */}
                         <span
-                            className={"relative z-10 inline-block transition-transform duration-300 group-hover:scale-130"}
+                            className="
+                                absolute inset-0
+                                -translate-x-full
+                                group-hover:translate-x-0
+                                transition-transform duration-500 ease-out
+                            "
+                            style={{backgroundColor: token.mainColor}}
+                        />
+
+                        {/* text */}
+                        <span
+                            className="
+                                relative z-10
+                                group-hover:text-white
+                                transition-colors duration-300
+                            "
                         >
                             Xem thêm
                         </span>
-
                     </div>
                 </div>
             )}
