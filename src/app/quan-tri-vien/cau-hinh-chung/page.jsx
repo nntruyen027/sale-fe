@@ -2,31 +2,26 @@
 
 import {usePageInfoStore} from "@/store/page-info";
 import {useEffect, useState} from "react";
-import HomeAboutMe from "@/app/components/template/HomeAboutMe/HomeAboutMe";
 import {Select} from "antd";
-import HomeChucNang from "@/app/components/template/HomeChucNang/HomeChucNang";
-import HomeSanPhamGoiY from "@/app/components/template/HomeSanPhamGoiY/HomeSanPhamGoiY";
-import HomeBanner from "@/app/quan-tri-vien/cau-hinh-trang-chu/components/HomeBanner";
+import ChungHeader from "@/app/components/template/ChungHeader/ChungHeader";
+import ChungFooter from "@/app/components/template/ChungFooter/ChungFooter";
 
 const COMPONENT_MAP = {
-    "home_gioithieu": HomeAboutMe,
-    "home_chucnang": HomeChucNang,
-    "home_sanphamgoiy": HomeSanPhamGoiY,
-    "home_banner": HomeBanner
-
+    "chung_header": ChungHeader,
+    "chung_footer": ChungFooter,
 };
 
 
 export default function Page() {
     const setPageInfo = usePageInfoStore(state => state.setPageInfo)
-    const [templateKey, setTemplateKey] = useState("home_gioithieu");
+    const [templateKey, setTemplateKey] = useState("chung_header");
 
     const TemplateComponent = COMPONENT_MAP[templateKey];
 
 
     useEffect(() => {
         setPageInfo({
-            title: 'Giao diện trang chủ'
+            title: 'Giao diện chung'
         })
     }, []);
     return (<div>
@@ -37,10 +32,8 @@ export default function Page() {
                 style={{width: 160}}
                 onChange={setTemplateKey}
                 options={[
-                    {label: "Về chúng tôi", value: "home_gioithieu"},
-                    {label: "Tính năng", value: "home_chucnang"},
-                    {label: "Sản phẩm gợi ý", value: 'home_sanphamgoiy'},
-                    {label: "Banner", value: 'home_banner'}
+                    {label: "Đầu trang", value: "chung_header"},
+                    {label: "Chân trang", value: "chung_footer"},
                 ]}
             />
         </div>

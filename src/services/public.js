@@ -60,9 +60,9 @@ export async function layGiaTriThamSo(khoa) {
     }
 }
 
-export async function layDsBanner() {
+export async function layHomeBanner() {
     try {
-        const res = await api.get(BASE_PATH + '/banner');
+        const res = await api.get(BASE_PATH + '/home_banner');
         return res.data;
     } catch (e) {
         throw new Error(e?.response?.data?.message)
@@ -105,6 +105,25 @@ export async function layDsSanPham({loaiSp, search, page, size}) {
         throw new Error(e?.response?.data?.message)
     }
 }
+
+export async function layChungFooter() {
+    try {
+        const res = await api.get(`${BASE_PATH}/chung_footer`);
+        return res.data;
+    } catch (e) {
+        throw new Error(e?.response?.data?.message)
+    }
+}
+
+export async function layChungHeader() {
+    try {
+        const res = await api.get(`${BASE_PATH}/chung_header`);
+        return res.data;
+    } catch (e) {
+        throw new Error(e?.response?.data?.message)
+    }
+}
+
 
 export async function laySanPhamTheoId(id) {
     try {

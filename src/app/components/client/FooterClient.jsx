@@ -1,17 +1,27 @@
 'use client'
 
-import {Layout} from "antd";
+import {useEffect, useState} from "react";
+import {layChungFooter} from "@/services/public";
+import ChungFooter1View from "@/app/components/template/ChungFooter/ChungFooter1/ChungFooter1View";
 
-export default function FooterClient() {
-    return (
-        <Layout.Footer
-            style={{
-                padding: '20px 10%'
-            }}
-        >
-            <div>
-                Copyright &copy; 2026 | Powered by Nguyễn Ngọc Truyện
-            </div>
-        </Layout.Footer>
-    )
+const TEMP_HEADER_MAP = {
+    "mau-1": ChungFooter1View,
+};
+
+export default function FooterClient(props) {
+    const [temFooterKey, setTemplatFooterKey] = useState("mau-1");
+    const TemplatFooter = TEMP_HEADER_MAP[temFooterKey];
+
+    useEffect(() => {
+        const getTemplateKey = async () => {
+            const header = await layChungFooter();
+            setTemplatFooterKey(header?.template || 'mau-1');
+
+        }
+
+        getTemplateKey();
+    })
+    return (temFooterKey && (
+        <TemplatFooter readOnly/>
+    ))
 }

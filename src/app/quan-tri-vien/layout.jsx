@@ -119,15 +119,23 @@ const menuConfig = [
                 permissions: ["param:read"],
             },
             {
-                key: "/quan-tri-vien/banner",
-                label: "Banner",
+                key: "/quan-tri-vien/giao-dien",
+                label: "Giao diện",
                 permissions: [],
+                children: [
+                    {
+                        key: "/quan-tri-vien/cau-hinh-chung",
+                        label: "Chung",
+                        permissions: [],
+                    },
+                    {
+                        key: "/quan-tri-vien/cau-hinh-trang-chu",
+                        label: "Trang chủ",
+                        permissions: [],
+                    }
+                ]
             },
-            {
-                key: "/quan-tri-vien/cau-hinh-trang-chu",
-                label: "Giao diện Trang chủ",
-                permissions: [],
-            }
+
         ],
     },
 ];

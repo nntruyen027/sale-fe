@@ -3,7 +3,7 @@
 import {useEffect, useState} from "react";
 import {Carousel, Spin} from "antd";
 import Link from "next/link";
-import {layDsBanner, layGiaTriThamSo} from "@/services/public";
+import {layGiaTriThamSo, layHomeBanner} from "@/services/public";
 import {toBoolean} from "@/utils/parse";
 
 const HEADER_HEIGHT = 64;
@@ -21,7 +21,7 @@ export default function HomeBanner() {
                 const config = await layGiaTriThamSo('bannerHome');
                 setIsCarousel(toBoolean(config));
 
-                const banners = await layDsBanner();
+                const banners = await layHomeBanner();
                 setBannerData(banners || []);
             } finally {
                 setLoading(false);
